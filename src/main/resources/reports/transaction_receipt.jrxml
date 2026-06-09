@@ -1,36 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" 
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" 
-              name="TransactionReceipt" 
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="TransactionReceipt"
               language="java"
-              pageWidth="420" pageHeight="595" 
-              columnWidth="380" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" 
-             >
+              pageWidth="420" pageHeight="595"
+              columnWidth="380" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
     <property name="net.sf.jasperreports.compiler.xml.validation" value="false"/>
 
-    <!-- Filter by a specific transaction_id -->
     <parameter name="transaction_id" class="java.lang.Integer">
         <defaultValueExpression><![CDATA[0]]></defaultValueExpression>
     </parameter>
 
     <queryString>
         <![CDATA[
-        SELECT 
+        SELECT
             t.transaction_id,
-            t.issue_date,
-            t.due_date,
-            t.return_date,
+            t.issue_date::text AS issue_date,
+            t.due_date::text AS due_date,
+            COALESCE(t.return_date::text, '') AS return_date,
             t.status,
             u.member_code,
             u.full_name,
-            u.email,
-            u.phone,
+            COALESCE(u.email, '') AS email,
+            COALESCE(u.phone, '') AS phone,
             b.book_id,
             b.title,
-            b.author,
-            b.isbn,
-            b.publisher
+            COALESCE(b.author, '') AS author,
+            COALESCE(b.isbn, '') AS isbn,
+            COALESCE(b.publisher, '') AS publisher
         FROM transactions t
         JOIN users u ON t.user_id = u.user_id
         JOIN books b ON t.book_id = b.book_id
@@ -54,70 +52,56 @@
     <field name="publisher" class="java.lang.String"/>
 
     <background>
-        <band splitType="Stretch"/>
+        <band height="0" splitType="Stretch"/>
     </background>
 
     <title>
         <band height="100" splitType="Stretch">
-            <!-- Full-width header stripe -->
+            <!-- Header stripe -->
             <rectangle>
                 <reportElement mode="Opaque" x="0" y="0" width="380" height="75" backcolor="#86000D"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
-
             <!-- Brand name -->
             <staticText>
                 <reportElement x="15" y="10" width="260" height="28" forecolor="#FFFFFF"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="18" isBold="true"/>
-                </textElement>
+                <textElement verticalAlignment="Middle"><font size="18" isBold="true"/></textElement>
                 <text><![CDATA[PERPUSTAKAAN FREEDOM]]></text>
             </staticText>
-
             <!-- Tagline -->
             <staticText>
                 <reportElement x="15" y="38" width="260" height="16" forecolor="#F5C6CB"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="9" isItalic="true"/>
-                </textElement>
+                <textElement verticalAlignment="Middle"><font size="9" isItalic="true"/></textElement>
                 <text><![CDATA[Sistem Informasi Manajemen Perpustakaan]]></text>
             </staticText>
-
-            <!-- Receipt badge -->
+            <!-- Receipt badge background -->
             <rectangle>
                 <reportElement mode="Opaque" x="268" y="16" width="94" height="34" backcolor="#FFFFFF"/>
-                <graphicElement>
-                    <pen lineWidth="0.0"/>
-                </graphicElement>
+                <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <!-- Badge label -->
             <staticText>
                 <reportElement x="268" y="16" width="94" height="18" forecolor="#86000D"/>
-                <textElement textAlignment="Center" verticalAlignment="Bottom">
-                    <font size="7" isBold="true"/>
-                </textElement>
+                <textElement textAlignment="Center" verticalAlignment="Bottom"><font size="7" isBold="true"/></textElement>
                 <text><![CDATA[NOTA TRANSAKSI]]></text>
             </staticText>
+            <!-- Transaction ID -->
             <textField>
                 <reportElement x="268" y="34" width="94" height="16" forecolor="#86000D"/>
-                <textElement textAlignment="Center" verticalAlignment="Top">
-                    <font size="11" isBold="true"/>
-                </textElement>
+                <textElement textAlignment="Center" verticalAlignment="Top"><font size="11" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["#" + $F{transaction_id}]]></textFieldExpression>
             </textField>
-
-            <!-- Print date sub-header -->
-            <textField pattern="dd/MM/yyyy HH:mm">
+            <!-- Print timestamp -->
+            <textField>
                 <reportElement x="0" y="80" width="380" height="16" forecolor="#5C5F61"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="8"/>
-                </textElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA["Dicetak: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
             </textField>
         </band>
     </title>
 
     <detail>
-        <band height="390" splitType="Stretch">
+        <band height="400" splitType="Stretch">
 
             <!-- ── SECTION 1: DETAIL ANGGOTA ── -->
             <rectangle>
@@ -126,13 +110,10 @@
             </rectangle>
             <staticText>
                 <reportElement x="8" y="5" width="370" height="20" forecolor="#86000D"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="9" isBold="true"/>
-                </textElement>
+                <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[DETAIL ANGGOTA]]></text>
             </staticText>
 
-            <!-- Member Code -->
             <staticText>
                 <reportElement x="8" y="32" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -149,7 +130,6 @@
                 <textFieldExpression><![CDATA[$F{member_code} == null ? "-" : $F{member_code}]]></textFieldExpression>
             </textField>
 
-            <!-- Full Name -->
             <staticText>
                 <reportElement x="8" y="50" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -166,7 +146,6 @@
                 <textFieldExpression><![CDATA[$F{full_name}]]></textFieldExpression>
             </textField>
 
-            <!-- Email -->
             <staticText>
                 <reportElement x="8" y="68" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -180,10 +159,9 @@
             <textField>
                 <reportElement x="138" y="68" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{email} == null || $F{email}.isEmpty() ? "-" : $F{email}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{email}.isEmpty() ? "-" : $F{email}]]></textFieldExpression>
             </textField>
 
-            <!-- Phone -->
             <staticText>
                 <reportElement x="8" y="86" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -197,10 +175,9 @@
             <textField>
                 <reportElement x="138" y="86" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{phone} == null || $F{phone}.isEmpty() ? "-" : $F{phone}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{phone}.isEmpty() ? "-" : $F{phone}]]></textFieldExpression>
             </textField>
 
-            <!-- Divider -->
             <line>
                 <reportElement x="0" y="110" width="380" height="1" forecolor="#E4BEBA"/>
             </line>
@@ -212,13 +189,10 @@
             </rectangle>
             <staticText>
                 <reportElement x="8" y="118" width="370" height="20" forecolor="#86000D"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="9" isBold="true"/>
-                </textElement>
+                <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[DETAIL BUKU]]></text>
             </staticText>
 
-            <!-- Book ID -->
             <staticText>
                 <reportElement x="8" y="145" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -235,7 +209,6 @@
                 <textFieldExpression><![CDATA[$F{book_id}]]></textFieldExpression>
             </textField>
 
-            <!-- Title -->
             <staticText>
                 <reportElement x="8" y="163" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -252,7 +225,6 @@
                 <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
             </textField>
 
-            <!-- Author -->
             <staticText>
                 <reportElement x="8" y="181" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -266,10 +238,9 @@
             <textField>
                 <reportElement x="138" y="181" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{author} == null || $F{author}.isEmpty() ? "-" : $F{author}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{author}.isEmpty() ? "-" : $F{author}]]></textFieldExpression>
             </textField>
 
-            <!-- ISBN -->
             <staticText>
                 <reportElement x="8" y="199" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -283,10 +254,9 @@
             <textField>
                 <reportElement x="138" y="199" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{isbn} == null || $F{isbn}.isEmpty() ? "-" : $F{isbn}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{isbn}.isEmpty() ? "-" : $F{isbn}]]></textFieldExpression>
             </textField>
 
-            <!-- Publisher -->
             <staticText>
                 <reportElement x="8" y="217" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -300,10 +270,9 @@
             <textField>
                 <reportElement x="138" y="217" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{publisher} == null || $F{publisher}.isEmpty() ? "-" : $F{publisher}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{publisher}.isEmpty() ? "-" : $F{publisher}]]></textFieldExpression>
             </textField>
 
-            <!-- Divider -->
             <line>
                 <reportElement x="0" y="241" width="380" height="1" forecolor="#E4BEBA"/>
             </line>
@@ -315,13 +284,10 @@
             </rectangle>
             <staticText>
                 <reportElement x="8" y="249" width="370" height="20" forecolor="#86000D"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="9" isBold="true"/>
-                </textElement>
+                <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[DETAIL TRANSAKSI]]></text>
             </staticText>
 
-            <!-- Tanggal Pinjam -->
             <staticText>
                 <reportElement x="8" y="276" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -338,7 +304,6 @@
                 <textFieldExpression><![CDATA[$F{issue_date}]]></textFieldExpression>
             </textField>
 
-            <!-- Tenggat Waktu -->
             <staticText>
                 <reportElement x="8" y="294" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -355,7 +320,6 @@
                 <textFieldExpression><![CDATA[$F{due_date}]]></textFieldExpression>
             </textField>
 
-            <!-- Tanggal Kembali -->
             <staticText>
                 <reportElement x="8" y="312" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -369,10 +333,9 @@
             <textField>
                 <reportElement x="138" y="312" width="234" height="16"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA[$F{return_date} == null || $F{return_date}.isEmpty() || $F{return_date}.equals("null") ? "-" : $F{return_date}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{return_date}.isEmpty() ? "-" : $F{return_date}]]></textFieldExpression>
             </textField>
 
-            <!-- Status -->
             <staticText>
                 <reportElement x="8" y="330" width="120" height="16" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
@@ -389,28 +352,22 @@
                 <textFieldExpression><![CDATA[$F{status}.equals("Issued") ? "DIPINJAM (AKTIF)" : ($F{status}.equals("Returned") ? "SELESAI / DIKEMBALIKAN" : "HILANG")]]></textFieldExpression>
             </textField>
 
-            <!-- ── FOOTER BOX ── -->
+            <!-- Footer line -->
             <line>
                 <reportElement x="0" y="360" width="380" height="1" forecolor="#86000D"/>
                 <graphicElement><pen lineWidth="1.5"/></graphicElement>
             </line>
 
-            <!-- Ketentuan denda -->
             <staticText>
                 <reportElement x="0" y="367" width="380" height="14" forecolor="#5C5F61"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="7" isItalic="true"/>
-                </textElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="7" isItalic="true"/></textElement>
                 <text><![CDATA[* Keterlambatan pengembalian buku dikenakan denda sesuai tarif yang berlaku.]]></text>
             </staticText>
             <staticText>
                 <reportElement x="0" y="380" width="380" height="14" forecolor="#86000D"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true"/>
-                </textElement>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Terima kasih telah menggunakan layanan Perpustakaan Freedom!]]></text>
             </staticText>
-
         </band>
     </detail>
 
