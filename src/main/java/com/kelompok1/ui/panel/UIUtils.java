@@ -73,34 +73,48 @@ public class UIUtils {
 
     public static JPanel createKPICard(String title, String value, String badgeText, boolean isPositive) {
         JPanel card = createCardPanel(new BorderLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        card.setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
 
         // Title row (label-md) — uppercase
         JLabel lblTitle = new JLabel(title.toUpperCase());
-        lblTitle.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblTitle.setFont(DesignSystem.bodyFont(10f, Font.BOLD));
         lblTitle.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         card.add(lblTitle, BorderLayout.NORTH);
 
         // Value — display-lg
         JLabel lblVal = new JLabel(value);
-        lblVal.setFont(DesignSystem.displayFont(28f, Font.BOLD));
+        lblVal.setFont(DesignSystem.displayFont(24f, Font.BOLD));
         lblVal.setForeground(DesignSystem.ON_SURFACE);
         card.add(lblVal, BorderLayout.CENTER);
 
         // Badge
         if (badgeText != null && !badgeText.isBlank()) {
+            final String badgeBg = isPositive ? "#e6f4ea" : "#fce8e6";
+            final String badgeFg = isPositive ? "#1e7e34" : "#ba1a1a";
+            
+            JPanel badgeContainer = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(Color.decode(badgeBg));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                    g2.dispose();
+                }
+            };
+            badgeContainer.setLayout(new FlowLayout(FlowLayout.CENTER, 8, 2));
+            badgeContainer.setOpaque(false);
+            
             JLabel lblBadge = new JLabel(badgeText);
-            lblBadge.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-            String badgeBg = isPositive ? "#e6f4ea" : "#fce8e6";
-            String badgeFg = isPositive ? "#1e7e34" : "#ba1a1a";
-            lblBadge.putClientProperty(FlatClientProperties.STYLE,
-                "background: " + badgeBg + "; foreground: " + badgeFg + "; opaque: true");
-            lblBadge.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+            lblBadge.setFont(DesignSystem.bodyFont(9f, Font.BOLD));
+            lblBadge.setForeground(Color.decode(badgeFg));
+            badgeContainer.add(lblBadge);
 
-            JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 4));
             south.setOpaque(false);
-            south.add(lblBadge);
+            south.add(badgeContainer);
             card.add(south, BorderLayout.SOUTH);
         }
 

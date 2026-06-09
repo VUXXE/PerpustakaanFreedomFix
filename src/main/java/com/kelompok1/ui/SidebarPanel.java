@@ -59,7 +59,7 @@ public class SidebarPanel extends JPanel {
         // Nav buttons
         ButtonGroup group = new ButtonGroup();
         btnDashboard = createNavButton("Beranda",        "Dashboard");
-        btnMembers   = createNavButton("Anggota",        "Members");
+        btnMembers   = createNavButton("Members",        "Members");
         btnAddBooks  = createNavButton("Manajemen Buku", "Books");
         btnCheckout  = createNavButton("Transaksi",      "Transactions");
         btnFines     = createNavButton("Denda",          "Fines");

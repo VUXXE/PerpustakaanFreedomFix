@@ -45,12 +45,20 @@ public class DatabaseHelper {
                     "phone TEXT, " +
                     "role VARCHAR(50) NOT NULL DEFAULT 'Member' CHECK(role IN ('Admin', 'Member')), " +
                     "status VARCHAR(50) NOT NULL DEFAULT 'Active' CHECK(status IN ('Active', 'Suspended')), " +
+                    "address TEXT, " +
                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                     ");");
             
-            // Alter table to add member_code if it doesn't exist (H2 supports ADD COLUMN IF NOT EXISTS, Postgres does too in newer versions but let's just do it conditionally or we can just try/catch if it's Postgres)
+            // Alter table to add member_code if it doesn't exist
             try {
                 stmt.execute("ALTER TABLE users ADD COLUMN member_code VARCHAR(50) UNIQUE;");
+            } catch (SQLException e) {
+                // Ignore if column already exists
+            }
+
+            // Alter table to add address if it doesn't exist
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN address TEXT;");
             } catch (SQLException e) {
                 // Ignore if column already exists
             }

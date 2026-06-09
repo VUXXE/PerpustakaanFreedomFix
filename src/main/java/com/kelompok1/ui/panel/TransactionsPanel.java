@@ -32,6 +32,19 @@ public class TransactionsPanel extends JPanel {
     private JLabel lblPage;
     private String currentSearchQuery = null;
 
+    // Form fields (top panel)
+    private JLabel lblFormTitle;
+    private JLabel lblFormSubtitle;
+    private JTextField txtMemberCode;
+    private JLabel lblMemberName;
+    private JTextField txtBookId;
+    private JLabel lblBookTitle;
+    private JSpinner spinDuration;
+    private JButton btnReturnBook;
+    private JButton btnIssueBook;
+    private JLabel lblError;
+    private final int[] validatedUserId = new int[]{-1};
+
     public TransactionsPanel() {
         this.transactionService = new TransactionService();
         this.userService = new UserService();
@@ -47,71 +60,256 @@ public class TransactionsPanel extends JPanel {
     }
 
     private void initPanel() {
-        // --- HEADER PANEL (NORTH) ---
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(UIManager.getColor("Panel.background"));
-        
-        transactionsTitleLabel = new JLabel("Riwayat Transaksi (Memuat...)");
-        transactionsTitleLabel.putClientProperty(FlatClientProperties.STYLE, "font: bold +6");
-        headerPanel.add(transactionsTitleLabel, BorderLayout.WEST);
-        
-        // Controls (Search + Issue/Return)
-        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        controlsPanel.setBackground(UIManager.getColor("Panel.background"));
-        
-        // Local search bar removed, using header search bar
-        
-        JButton btnIssueBook = new JButton("+ Pinjamkan Buku");
-        DesignSystem.applyPrimaryButton(btnIssueBook);
+        // ─── 1. NORTH WRAPPER (FORM AT TOP) ────────────────────────
+        JPanel northWrapper = new JPanel();
+        northWrapper.setLayout(new BoxLayout(northWrapper, BoxLayout.Y_AXIS));
+        northWrapper.setOpaque(false);
 
-        JButton btnReturnBook = new JButton("Kembalikan Buku");
-        DesignSystem.applySecondaryButton(btnReturnBook);
+        // Instantiate form components
+        txtMemberCode = UIUtils.createFormTextField("Masukkan Kode Anggota (misal: MEM-0001)");
+        txtBookId = UIUtils.createFormTextField("Masukkan ID Buku (angka)");
+
+        lblMemberName = new JLabel(" ");
+        lblMemberName.putClientProperty(FlatClientProperties.STYLE, "font: -1");
+
+        lblBookTitle = new JLabel(" ");
+        lblBookTitle.putClientProperty(FlatClientProperties.STYLE, "font: -1");
+
+        spinDuration = new JSpinner(new SpinnerNumberModel(7, 1, 90, 1));
+
+        // Match heights and widths
+        int tfHeight = txtMemberCode.getPreferredSize().height;
+        int tfWidth = txtMemberCode.getPreferredSize().width;
+        spinDuration.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        spinDuration.setPreferredSize(new Dimension(tfWidth, tfHeight));
+
+        // Background SwingWorker to load default borrow duration setting
+        SwingWorker<Integer, Void> durationLoader = new SwingWorker<>() {
+            @Override
+            protected Integer doInBackground() {
+                try {
+                    return Integer.parseInt(settingsService.getSetting("borrow_duration", "7"));
+                } catch (Exception e) {
+                    return 7;
+                }
+            }
+            @Override
+            protected void done() {
+                try {
+                    spinDuration.setValue(get());
+                } catch (Exception e) {
+                    // Ignore, fallback to default model
+                }
+            }
+        };
+        durationLoader.execute();
+
+        // Listeners for verification as typing
+        txtMemberCode.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            private void check() {
+                SwingUtilities.invokeLater(() -> verifyMember(txtMemberCode.getText().trim(), lblMemberName, validatedUserId));
+            }
+        });
+
+        txtBookId.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { check(); }
+            private void check() {
+                SwingUtilities.invokeLater(() -> verifyBook(txtBookId.getText().trim(), lblBookTitle));
+            }
+        });
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, DesignSystem.OUTLINE_VARIANT),
+            BorderFactory.createEmptyBorder(10, 0, 15, 0)
+        ));
+
+        GridBagConstraints fGbc = new GridBagConstraints();
+        fGbc.fill = GridBagConstraints.HORIZONTAL;
+        fGbc.insets = new Insets(4, 6, 4, 6);
+        fGbc.weightx = 0.33;
+
+        int r = 0;
+
+        // Row 0: Form Header Title & Subtitle
+        fGbc.gridy = r;
+        fGbc.gridx = 0;
+        fGbc.gridwidth = 3;
+        fGbc.weightx = 1.0;
+        fGbc.insets = new Insets(4, 0, 4, 0); // No left inset to align with table title
+
+        lblFormTitle = new JLabel("Form Transaksi Peminjaman");
+        lblFormTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +4");
+        lblFormTitle.setForeground(DesignSystem.ON_SURFACE);
+
+        lblFormSubtitle = new JLabel("(Silakan lengkapi data anggota dan buku.)");
+        lblFormSubtitle.setFont(DesignSystem.bodyFont(10f, Font.PLAIN));
+        lblFormSubtitle.setForeground(UIManager.getColor("Label.disabledForeground"));
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.X_AXIS));
+        titlePanel.setOpaque(false);
+        titlePanel.add(lblFormTitle);
+        titlePanel.add(Box.createHorizontalStrut(8));
+        titlePanel.add(lblFormSubtitle);
+        formPanel.add(titlePanel, fGbc);
+
+        // Row 1: Labels
+        r++;
+        fGbc.gridy = r;
+        fGbc.gridwidth = 1;
+        fGbc.weightx = 0.33;
+        fGbc.insets = new Insets(10, 6, 0, 6);
+
+        fGbc.gridx = 0;
+        JLabel lblMem = new JLabel("Kode Anggota*");
+        lblMem.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblMem.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        formPanel.add(lblMem, fGbc);
+
+        fGbc.gridx = 1;
+        JLabel lblBkB = new JLabel("ID Buku*");
+        lblBkB.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblBkB.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        formPanel.add(lblBkB, fGbc);
+
+        fGbc.gridx = 2;
+        JLabel lblDur = new JLabel("Durasi Peminjaman (Hari)*");
+        lblDur.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblDur.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        formPanel.add(lblDur, fGbc);
+
+        // Row 2: Fields
+        r++;
+        fGbc.gridy = r;
+        fGbc.insets = new Insets(2, 6, 4, 6);
+
+        fGbc.gridx = 0; formPanel.add(txtMemberCode, fGbc);
+        fGbc.gridx = 1; formPanel.add(txtBookId, fGbc);
+        fGbc.gridx = 2; formPanel.add(spinDuration, fGbc);
+
+        // Row 3: Verification Feedback Labels
+        r++;
+        fGbc.gridy = r;
+        fGbc.insets = new Insets(0, 6, 6, 6);
+
+        fGbc.gridx = 0; formPanel.add(lblMemberName, fGbc);
+        fGbc.gridx = 1; formPanel.add(lblBookTitle, fGbc);
+
+        // Row 4: Buttons
+        r++;
+        fGbc.gridy = r;
+        fGbc.gridx = 0;
+        fGbc.gridwidth = 3;
+        fGbc.weightx = 1.0;
+        fGbc.insets = new Insets(12, 6, 6, 6);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonPanel.setOpaque(false);
+
+        btnReturnBook = new JButton("Kembalikan");
+        DesignSystem.applyDangerButton(btnReturnBook);
         btnReturnBook.setEnabled(false);
-        
-        controlsPanel.add(btnIssueBook);
-        controlsPanel.add(btnReturnBook);
-        headerPanel.add(controlsPanel, BorderLayout.EAST);
-        
-        add(headerPanel, BorderLayout.NORTH);
-        
-        // --- TABLE (CENTER) ---
+        buttonPanel.add(btnReturnBook);
+
+        JButton btnCancel = new JButton("Batal");
+        DesignSystem.applySecondaryButton(btnCancel);
+        btnCancel.addActionListener(e -> clearForm());
+        buttonPanel.add(btnCancel);
+
+        btnIssueBook = new JButton("Pinjamkan");
+        DesignSystem.applyPrimaryButton(btnIssueBook);
+        btnIssueBook.addActionListener(e -> saveTransaction());
+        buttonPanel.add(btnIssueBook);
+
+        formPanel.add(buttonPanel, fGbc);
+
+        // Row 5: Error Label
+        r++;
+        fGbc.gridy = r;
+        fGbc.gridx = 0;
+        fGbc.gridwidth = 3;
+        fGbc.weightx = 1.0;
+        fGbc.insets = new Insets(4, 6, 0, 6);
+
+        lblError = new JLabel(" ");
+        lblError.putClientProperty(FlatClientProperties.STYLE, "foreground: $Component.error.focusedBorderColor; font: bold -1");
+        formPanel.add(lblError, fGbc);
+
+        northWrapper.add(formPanel);
+        add(northWrapper, BorderLayout.NORTH);
+
+        // ─── 2. TABLE PANEL (CENTER - BELOW FORM) ───────────────────────────
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+
+        // Title directly above table
+        transactionsTitleLabel = new JLabel("Riwayat Transaksi (Memuat...)");
+        transactionsTitleLabel.putClientProperty(FlatClientProperties.STYLE, "font: bold +4");
+        transactionsTitleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        centerWrapper.add(transactionsTitleLabel, BorderLayout.NORTH);
+
         String[] cols = {"ID Transaksi", "ID Pengguna", "ID Buku", "Kode Anggota", "Judul Buku", "Tgl Pinjam", "Tenggat Waktu", "Tgl Kembali", "Status"};
         transactionsTableModel = new DefaultTableModel(new Object[][]{}, cols) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         transactionsTable = UIUtils.createStyledTable(new Object[][]{}, cols);
         transactionsTable.setModel(transactionsTableModel);
-        
+
         transactionsTable.getColumnModel().getColumn(1).setMinWidth(0);
         transactionsTable.getColumnModel().getColumn(1).setMaxWidth(0);
         transactionsTable.getColumnModel().getColumn(1).setWidth(0);
-        
+
         transactionsTable.getColumnModel().getColumn(2).setMinWidth(0);
         transactionsTable.getColumnModel().getColumn(2).setMaxWidth(0);
         transactionsTable.getColumnModel().getColumn(2).setWidth(0);
-        
+
+        // Selection Listener
         transactionsTable.getSelectionModel().addListSelectionListener(e -> {
             int selectedRow = transactionsTable.getSelectedRow();
-            if (selectedRow != -1) {
+            boolean hasSelection = selectedRow != -1;
+            if (hasSelection) {
                 String status = (String) transactionsTableModel.getValueAt(selectedRow, 8);
                 btnReturnBook.setEnabled("Issued".equals(status));
+
+                // Populate inline fields
+                txtMemberCode.setText((String) transactionsTableModel.getValueAt(selectedRow, 3));
+                txtBookId.setText(String.valueOf(transactionsTableModel.getValueAt(selectedRow, 2)));
             } else {
                 btnReturnBook.setEnabled(false);
             }
         });
-        
-        // Action Listeners
-        btnIssueBook.addActionListener(e -> showIssueBookDialog());
-        
+
+        // Double-click row logic
+        transactionsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int selectedRow = transactionsTable.getSelectedRow();
+                    if (selectedRow != -1) {
+                        txtMemberCode.setText((String) transactionsTableModel.getValueAt(selectedRow, 3));
+                        txtBookId.setText(String.valueOf(transactionsTableModel.getValueAt(selectedRow, 2)));
+                    }
+                }
+            }
+        });
+
         btnReturnBook.addActionListener(e -> {
             int selectedRow = transactionsTable.getSelectedRow();
             if (selectedRow == -1) return;
-            
+
             int txId = (Integer) transactionsTableModel.getValueAt(selectedRow, 0);
             int userId = (Integer) transactionsTableModel.getValueAt(selectedRow, 1);
             int bookId = (Integer) transactionsTableModel.getValueAt(selectedRow, 2);
             String dueDateStr = (String) transactionsTableModel.getValueAt(selectedRow, 6);
-            
+
             int confirm = JOptionPane.showConfirmDialog(
                 this,
                 "Proses pengembalian untuk transaksi #" + txId + "?",
@@ -119,13 +317,13 @@ public class TransactionsPanel extends JPanel {
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
             );
-            
+
             if (confirm == JOptionPane.YES_OPTION) {
                 btnReturnBook.setEnabled(false);
                 SwingWorker<Boolean, Void> returnWorker = new SwingWorker<>() {
                     private double fineAmount = 0.0;
                     private boolean isOverdue = false;
-                    
+
                     @Override
                     protected Boolean doInBackground() {
                         try {
@@ -142,18 +340,18 @@ public class TransactionsPanel extends JPanel {
                                 fineAmount = days * fineRate;
                                 isOverdue = true;
                             }
-                            
+
                             if (isOverdue) {
                                 fineService.assessFines();
                             }
-                            
+
                             return transactionService.returnBook(txId, bookId);
                         } catch (Exception ex) {
                             ex.printStackTrace();
                             return false;
                         }
                     }
-                    
+
                     @Override
                     protected void done() {
                         try {
@@ -165,6 +363,7 @@ public class TransactionsPanel extends JPanel {
                                     JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dikembalikan. Tidak ada denda.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
                                 }
                                 loadTransactionsData(currentSearchQuery);
+                                clearForm();
                             } else {
                                 JOptionPane.showMessageDialog(TransactionsPanel.this, "Gagal memproses pengembalian buku.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
                             }
@@ -177,31 +376,35 @@ public class TransactionsPanel extends JPanel {
                 returnWorker.execute();
             }
         });
-        
-        JScrollPane scroll = new JScrollPane(transactionsTable);
-        add(scroll, BorderLayout.CENTER);
-        
+
+        JScrollPane tableScroll = new JScrollPane(transactionsTable);
+        tableScroll.setBorder(BorderFactory.createEmptyBorder());
+        centerWrapper.add(tableScroll, BorderLayout.CENTER);
+
+        add(centerWrapper, BorderLayout.CENTER);
+
+        // ─── 3. PAGINATION PANEL (SOUTH) ────────────────────────────────────
         btnPrevPage = new JButton();
         btnNextPage = new JButton();
         lblPage = new JLabel("Halaman 1");
-        
+
         btnPrevPage.addActionListener(e -> {
             if (currentPage > 1) {
                 currentPage--;
                 loadTransactionsData(currentSearchQuery);
             }
         });
-        
+
         btnNextPage.addActionListener(e -> {
             currentPage++;
             loadTransactionsData(currentSearchQuery);
         });
-        
+
         add(UIUtils.createPaginationPanel(btnPrevPage, btnNextPage, lblPage), BorderLayout.SOUTH);
-        
+
         loadTransactionsData(null);
     }
-    
+
     public void setSearchQuery(String query) {
         this.currentSearchQuery = query;
         currentPage = 1;
@@ -213,7 +416,7 @@ public class TransactionsPanel extends JPanel {
         transactionsTableModel.setRowCount(0);
         if (btnPrevPage != null) btnPrevPage.setEnabled(false);
         if (btnNextPage != null) btnNextPage.setEnabled(false);
-        
+
         SwingWorker<List<Transaction>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Transaction> doInBackground() {
@@ -251,34 +454,23 @@ public class TransactionsPanel extends JPanel {
         worker.execute();
     }
 
-    private void showIssueBookDialog() {
-        Window parentWindow = SwingUtilities.getWindowAncestor(this);
-        JDialog dialog = new JDialog(parentWindow, "Pinjamkan Buku (Peminjaman)", Dialog.ModalityType.APPLICATION_MODAL);
-        dialog.setSize(500, 400);
-        dialog.setLocationRelativeTo(this);
-        dialog.setLayout(new BorderLayout());
+    private void clearForm() {
+        txtMemberCode.setText("");
+        txtMemberCode.putClientProperty(FlatClientProperties.OUTLINE, null);
+        txtBookId.setText("");
+        txtBookId.putClientProperty(FlatClientProperties.OUTLINE, null);
 
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 10, 8, 10);
-        gbc.weightx = 1.0;
+        lblMemberName.setText(" ");
+        lblBookTitle.setText(" ");
+        lblError.setText(" ");
 
-        JTextField txtMemberCode = UIUtils.createFormTextField("Masukkan Kode Anggota (misal: MEM-0001)");
-        JLabel lblMemberName = new JLabel(" ");
-        lblMemberName.putClientProperty(FlatClientProperties.STYLE, "font: -1");
-        // We will store the validated userId here
-        final int[] validatedUserId = new int[]{-1};
+        validatedUserId[0] = -1;
 
-        JTextField txtBookId = UIUtils.createFormTextField("Masukkan ID Buku (angka)");
-        JLabel lblBookTitle = new JLabel(" ");
-        lblBookTitle.putClientProperty(FlatClientProperties.STYLE, "font: -1");
+        btnReturnBook.setEnabled(false);
+        btnIssueBook.setEnabled(true);
+        transactionsTable.clearSelection();
 
-        JSpinner spinDuration = new JSpinner(new SpinnerNumberModel(7, 1, 90, 1));
-        spinDuration.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
-        spinDuration.setPreferredSize(new Dimension(160, 36));
-
+        // Reset default borrow duration setting
         SwingWorker<Integer, Void> durationLoader = new SwingWorker<>() {
             @Override
             protected Integer doInBackground() {
@@ -293,101 +485,78 @@ public class TransactionsPanel extends JPanel {
                 try {
                     spinDuration.setValue(get());
                 } catch (Exception e) {
-                    // Ignore, fallback to default model
+                    // Ignore fallback
                 }
             }
         };
         durationLoader.execute();
+    }
 
-        txtMemberCode.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            private void check() {
-                SwingUtilities.invokeLater(() -> verifyMember(txtMemberCode.getText().trim(), lblMemberName, validatedUserId));
-            }
-        });
+    private void saveTransaction() {
+        String memberText = txtMemberCode.getText().trim();
+        String bookText = txtBookId.getText().trim();
 
-        txtBookId.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { check(); }
-            private void check() {
-                SwingUtilities.invokeLater(() -> verifyBook(txtBookId.getText().trim(), lblBookTitle));
-            }
-        });
+        boolean isValid = true;
+        if (memberText.isEmpty()) {
+            txtMemberCode.putClientProperty(FlatClientProperties.OUTLINE, "error");
+            isValid = false;
+        } else {
+            txtMemberCode.putClientProperty(FlatClientProperties.OUTLINE, null);
+        }
 
-        int row = 0;
-        UIUtils.addFormRow(formPanel, gbc, "Kode Anggota*", txtMemberCode, row++);
-        UIUtils.addFormRow(formPanel, gbc, "", lblMemberName, row++);
-        UIUtils.addFormRow(formPanel, gbc, "ID Buku*", txtBookId, row++);
-        UIUtils.addFormRow(formPanel, gbc, "", lblBookTitle, row++);
-        UIUtils.addFormRow(formPanel, gbc, "Durasi Peminjaman (Hari)*", spinDuration, row++);
+        if (bookText.isEmpty()) {
+            txtBookId.putClientProperty(FlatClientProperties.OUTLINE, "error");
+            isValid = false;
+        } else {
+            txtBookId.putClientProperty(FlatClientProperties.OUTLINE, null);
+        }
 
-        dialog.add(formPanel, BorderLayout.CENTER);
+        if (!isValid) {
+            lblError.setText("Silakan isi semua kolom.");
+            return;
+        }
 
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        btnPanel.setBackground(UIManager.getColor("Panel.background"));
-        btnPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Component.borderColor")));
+        if (!lblMemberName.getText().startsWith("✔") || validatedUserId[0] == -1) {
+            lblError.setText("Silakan masukkan anggota yang valid dan aktif.");
+            return;
+        }
+        if (!lblBookTitle.getText().startsWith("✔")) {
+            lblError.setText("Silakan masukkan buku yang valid dan tersedia.");
+            return;
+        }
 
-        JButton btnCancel = new JButton("Batal");
-        DesignSystem.applySecondaryButton(btnCancel);
-        btnCancel.addActionListener(e -> dialog.dispose());
+        lblError.setText(" ");
+        btnIssueBook.setEnabled(false);
 
-        JButton btnSave = new JButton("Pinjamkan Buku");
-        DesignSystem.applyPrimaryButton(btnSave);
-        btnSave.addActionListener(e -> {
-            String memberText = txtMemberCode.getText().trim();
-            String bookText = txtBookId.getText().trim();
+        int userId = validatedUserId[0];
+        int bookId = Integer.parseInt(bookText);
+        int duration = (Integer) spinDuration.getValue();
 
-            if (memberText.isEmpty() || bookText.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Silakan isi semua kolom.", "Kesalahan Validasi", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if (!lblMemberName.getText().startsWith("✔") || validatedUserId[0] == -1) {
-                JOptionPane.showMessageDialog(dialog, "Silakan masukkan anggota yang valid dan aktif.", "Kesalahan Validasi", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!lblBookTitle.getText().startsWith("✔")) {
-                JOptionPane.showMessageDialog(dialog, "Silakan masukkan buku yang valid dan tersedia.", "Kesalahan Validasi", JOptionPane.ERROR_MESSAGE);
-                return;
+        SwingWorker<Boolean, Void> issueWorker = new SwingWorker<>() {
+            @Override
+            protected Boolean doInBackground() {
+                return transactionService.issueBook(userId, bookId, duration);
             }
 
-            int userId = validatedUserId[0];
-            int bookId = Integer.parseInt(bookText);
-            int duration = (Integer) spinDuration.getValue();
-
-            SwingWorker<Boolean, Void> issueWorker = new SwingWorker<>() {
-                @Override
-                protected Boolean doInBackground() {
-                    return transactionService.issueBook(userId, bookId, duration);
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        boolean success = get();
-                        if (success) {
-                            dialog.dispose();
-                            loadTransactionsData(currentSearchQuery);
-                        } else {
-                            JOptionPane.showMessageDialog(dialog, "Gagal meminjamkan buku. Buku mungkin sedang kosong.", "Kesalahan Database", JOptionPane.ERROR_MESSAGE);
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        JOptionPane.showMessageDialog(dialog, "Terjadi kesalahan: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+            @Override
+            protected void done() {
+                btnIssueBook.setEnabled(true);
+                try {
+                    boolean success = get();
+                    if (success) {
+                        JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dipinjamkan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        loadTransactionsData(currentSearchQuery);
+                        clearForm();
+                    } else {
+                        lblError.setText("Gagal meminjamkan buku. Buku mungkin sedang kosong.");
                     }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    lblError.setText("Terjadi kesalahan: " + ex.getMessage());
                 }
-            };
-            issueWorker.execute();
-        });
-
-        btnPanel.add(btnCancel);
-        btnPanel.add(btnSave);
-        dialog.add(btnPanel, BorderLayout.SOUTH);
-
-        dialog.setVisible(true);
+            }
+        };
+        issueWorker.execute();
     }
 
     private static class MemberVerificationResult {

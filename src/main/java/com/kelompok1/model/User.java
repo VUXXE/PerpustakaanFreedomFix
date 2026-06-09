@@ -10,6 +10,7 @@ public class User {
     private String phone;
     private String role;
     private String status;
+    private String address;
     private String createdAt;
 
     public User() {}
@@ -41,6 +42,9 @@ public class User {
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
     
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

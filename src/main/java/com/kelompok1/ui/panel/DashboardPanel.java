@@ -22,11 +22,10 @@ public class DashboardPanel extends JPanel {
     private final UserService userService;
     private final FineService fineService;
 
-    private JPanel kpiGrid;
-    private JPanel chartCard;
+    private JPanel circulationGrid;
+    private JPanel generalGrid;
     private javax.swing.table.DefaultTableModel overdueModel;
     private javax.swing.table.DefaultTableModel recentModel;
-    private JPanel topBooksList;
 
     public DashboardPanel() {
         this.bookService = new BookService();
@@ -46,62 +45,82 @@ public class DashboardPanel extends JPanel {
         dashPanel.setBackground(UIManager.getColor("Panel.background"));
         dashPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        // 1. KPI Grid
-        kpiGrid = new JPanel(new GridLayout(2, 4, 15, 15));
-        kpiGrid.setBackground(UIManager.getColor("Panel.background"));
-        kpiGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 250));
-        JLabel loadingLabel = new JLabel("Memuat statistik...");
-        loadingLabel.putClientProperty(FlatClientProperties.STYLE, "font: bold +2");
-        kpiGrid.add(loadingLabel);
-
-        dashPanel.add(kpiGrid);
+        // 1. KPI Grids (Circulation and General data grouped separately with subtitles)
+        JPanel kpiWrapper = new JPanel();
+        kpiWrapper.setLayout(new BoxLayout(kpiWrapper, BoxLayout.Y_AXIS));
+        kpiWrapper.setOpaque(false);
+        kpiWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        // Section 1: Aktivitas Sirkulasi
+        JLabel lblCircTitle = new JLabel("AKTIVITAS SIRKULASI");
+        lblCircTitle.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblCircTitle.setForeground(DesignSystem.PRIMARY);
+        lblCircTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+        lblCircTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        kpiWrapper.add(lblCircTitle);
+        
+        circulationGrid = new JPanel(new GridLayout(1, 4, 16, 16));
+        circulationGrid.setOpaque(false);
+        circulationGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
+        circulationGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel loadCirc = new JLabel("Memuat sirkulasi...");
+        loadCirc.setFont(DesignSystem.bodyFont(12f, Font.ITALIC));
+        loadCirc.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        circulationGrid.add(loadCirc);
+        kpiWrapper.add(circulationGrid);
+        
+        kpiWrapper.add(Box.createVerticalStrut(20));
+        
+        // Section 2: Data Koleksi & Anggota
+        JLabel lblGenTitle = new JLabel("KOLEKSI & ANGGOTA");
+        lblGenTitle.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        lblGenTitle.setForeground(DesignSystem.TERTIARY);
+        lblGenTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+        lblGenTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        kpiWrapper.add(lblGenTitle);
+        
+        generalGrid = new JPanel(new GridLayout(1, 4, 16, 16));
+        generalGrid.setOpaque(false);
+        generalGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
+        generalGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JLabel loadGen = new JLabel("Memuat data perpustakaan...");
+        loadGen.setFont(DesignSystem.bodyFont(12f, Font.ITALIC));
+        loadGen.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        generalGrid.add(loadGen);
+        kpiWrapper.add(generalGrid);
+        
+        dashPanel.add(kpiWrapper);
         dashPanel.add(Box.createVerticalStrut(20));
-
-        // 2. Middle Section (Chart + Overdue Table)
-        JPanel midSection = new JPanel(new GridBagLayout());
-        midSection.setBackground(UIManager.getColor("Panel.background"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1.0;
-        
-        // Chart Panel (Placeholder)
-        chartCard = UIUtils.createCardPanel();
-        chartCard.setLayout(new BorderLayout());
-        JLabel lblChartTitle = new JLabel("Statistik Peminjaman");
-        lblChartTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +2");
-        lblChartTitle.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
-        chartCard.add(lblChartTitle, BorderLayout.NORTH);
-        
-        JPanel chartPlaceholder = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.LIGHT_GRAY);
-                g2.drawLine(20, getHeight()-20, getWidth()-20, getHeight()-20);
-                g2.drawLine(20, 20, 20, getHeight()-20);
-                
-                g2.setColor(new Color(101, 183, 108));
-                g2.setStroke(new BasicStroke(2f));
-                g2.drawArc(40, 50, 100, 100, 0, 180);
-                
-                g2.setColor(new Color(230, 80, 80));
-                g2.drawArc(80, 80, 100, 100, 0, 180);
+ 
+        // Mouse wheel listener to propagate scroll events from nested scrollable areas to the parent dashboard scroll pane
+        java.awt.event.MouseWheelListener bubbleScroll = e -> {
+            Component source = (Component) e.getSource();
+            Container parent = source.getParent();
+            while (parent != null && !(parent instanceof JScrollPane)) {
+                parent = parent.getParent();
+            }
+            if (parent != null) {
+                Container mainScroll = parent.getParent();
+                while (mainScroll != null && !(mainScroll instanceof JScrollPane)) {
+                    mainScroll = mainScroll.getParent();
+                }
+                if (mainScroll != null) {
+                    mainScroll.dispatchEvent(javax.swing.SwingUtilities.convertMouseEvent(source, e, mainScroll));
+                }
             }
         };
-        chartPlaceholder.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
-        chartCard.add(chartPlaceholder, BorderLayout.CENTER);
 
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.45; gbc.insets = new Insets(0, 0, 0, 10);
-        midSection.add(chartCard, gbc);
-
-        // Overdue Table Panel
+        // 2. Middle Section (Overdue Table only, stretched full width)
         JPanel overdueCard = UIUtils.createCardPanel();
         overdueCard.setLayout(new BorderLayout());
+        overdueCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        overdueCard.setBorder(BorderFactory.createEmptyBorder(0, 16, 16, 16));
+        
         JLabel lblOverdueTitle = new JLabel("Riwayat Keterlambatan");
         lblOverdueTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +2");
-        lblOverdueTitle.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20));
+        lblOverdueTitle.setBorder(BorderFactory.createEmptyBorder(15, 4, 10, 4));
         overdueCard.add(lblOverdueTitle, BorderLayout.NORTH);
         
         String[] colOverdue = {"ID Anggota", "Judul", "ISBN", "Tenggat Waktu", "Denda"};
@@ -112,29 +131,25 @@ public class DashboardPanel extends JPanel {
         tblOverdue.setModel(overdueModel);
         JScrollPane scrollOverdue = new JScrollPane(tblOverdue);
         scrollOverdue.setBorder(BorderFactory.createEmptyBorder());
+        scrollOverdue.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        scrollOverdue.addMouseWheelListener(bubbleScroll);
+        tblOverdue.addMouseWheelListener(bubbleScroll);
         overdueCard.add(scrollOverdue, BorderLayout.CENTER);
-
-        gbc.gridx = 1; gbc.weightx = 0.55; gbc.insets = new Insets(0, 10, 0, 0);
-        midSection.add(overdueCard, gbc);
-
-        midSection.setPreferredSize(new Dimension(getWidth(), 300));
-        midSection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
-        dashPanel.add(midSection);
+ 
+        overdueCard.setPreferredSize(new Dimension(getWidth(), 300));
+        overdueCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
+        dashPanel.add(overdueCard);
         dashPanel.add(Box.createVerticalStrut(20));
-
-        // 3. Bottom Section (Recent Checkouts + Top Books)
-        JPanel botSection = new JPanel(new GridBagLayout());
-        botSection.setBackground(UIManager.getColor("Panel.background"));
-        GridBagConstraints gbcB = new GridBagConstraints();
-        gbcB.fill = GridBagConstraints.BOTH;
-        gbcB.weighty = 1.0;
-
-        // Recent Checkouts
+ 
+        // 3. Bottom Section (Recent Checkouts, stretched full width)
         JPanel recentCard = UIUtils.createCardPanel();
         recentCard.setLayout(new BorderLayout());
+        recentCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        recentCard.setBorder(BorderFactory.createEmptyBorder(0, 16, 16, 16));
+        
         JPanel recentHeader = new JPanel(new BorderLayout());
         recentHeader.setOpaque(false);
-        recentHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20));
+        recentHeader.setBorder(BorderFactory.createEmptyBorder(15, 4, 10, 4));
         JLabel lblRecentTitle = new JLabel("Peminjaman Terbaru");
         lblRecentTitle.setFont(DesignSystem.displayFont(15f, Font.BOLD));
         lblRecentTitle.setForeground(DesignSystem.ON_SURFACE);
@@ -144,7 +159,7 @@ public class DashboardPanel extends JPanel {
         recentHeader.add(lblRecentTitle, BorderLayout.WEST);
         recentHeader.add(lblViewAll, BorderLayout.EAST);
         recentCard.add(recentHeader, BorderLayout.NORTH);
-
+ 
         String[] colRecent = {"ID", "ID Buku", "Judul", "Anggota", "Tgl Pinjam", "Tgl Kembali"};
         recentModel = new javax.swing.table.DefaultTableModel(new Object[][]{}, colRecent) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -153,46 +168,14 @@ public class DashboardPanel extends JPanel {
         tblRecent.setModel(recentModel);
         JScrollPane scrollRecent = new JScrollPane(tblRecent);
         scrollRecent.setBorder(BorderFactory.createEmptyBorder());
+        scrollRecent.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        scrollRecent.addMouseWheelListener(bubbleScroll);
+        tblRecent.addMouseWheelListener(bubbleScroll);
         recentCard.add(scrollRecent, BorderLayout.CENTER);
-
-        gbcB.gridx = 0; gbcB.gridy = 0; gbcB.weightx = 0.70; gbcB.insets = new Insets(0, 0, 0, 10);
-        botSection.add(recentCard, gbcB);
-
-        // Top Books Panel
-        JPanel topBooksCard = UIUtils.createCardPanel();
-        topBooksCard.setLayout(new BorderLayout());
-        JPanel topBooksHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
-        topBooksHeader.setOpaque(false);
-        JLabel lblTopBooks = new JLabel("Buku Terpopuler");
-        lblTopBooks.setFont(DesignSystem.bodyFont(12f, Font.BOLD));
-        lblTopBooks.putClientProperty(FlatClientProperties.STYLE,
-            "background: #86000d; foreground: #fff; opaque: true");
-        lblTopBooks.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        JLabel lblNewArrivals = new JLabel("Buku Baru");
-        lblNewArrivals.setFont(DesignSystem.bodyFont(12f, Font.PLAIN));
-        lblNewArrivals.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(DesignSystem.OUTLINE_VARIANT),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-        topBooksHeader.add(lblTopBooks);
-        topBooksHeader.add(lblNewArrivals);
-        topBooksCard.add(topBooksHeader, BorderLayout.NORTH);
-
-        topBooksList = new JPanel();
-        topBooksList.setLayout(new BoxLayout(topBooksList, BoxLayout.Y_AXIS));
-        topBooksList.setOpaque(false);
-        JLabel lblEmptyTopBooks = new JLabel("Memuat buku terpopuler...");
-        lblEmptyTopBooks.setFont(DesignSystem.bodyFont(13f, Font.PLAIN));
-        lblEmptyTopBooks.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        lblEmptyTopBooks.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        topBooksList.add(lblEmptyTopBooks);
-        
-        topBooksCard.add(topBooksList, BorderLayout.CENTER);
-
-        gbcB.gridx = 1; gbcB.weightx = 0.30; gbcB.insets = new Insets(0, 10, 0, 0);
-        botSection.add(topBooksCard, gbcB);
-        
-        dashPanel.add(botSection);
+ 
+        recentCard.setPreferredSize(new Dimension(getWidth(), 300));
+        recentCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
+        dashPanel.add(recentCard);
 
         JScrollPane mainScroll = new JScrollPane(dashPanel);
         mainScroll.setBorder(BorderFactory.createEmptyBorder());
@@ -225,88 +208,24 @@ public class DashboardPanel extends JPanel {
                 try {
                     DashboardData d = get();
                     
-                    // Populate KPI Grid
-                    kpiGrid.removeAll();
-                    kpiGrid.add(UIUtils.createKPICard("Buku Dipinjam", String.valueOf(d.borrowed), "", true));
-                    kpiGrid.add(UIUtils.createKPICard("Buku Dikembalikan", String.valueOf(d.returned), "", true));
-                    kpiGrid.add(UIUtils.createKPICard("Buku Terlambat", String.valueOf(d.overdue), "", false));
-                    kpiGrid.add(UIUtils.createKPICard("Buku Hilang", String.valueOf(d.missing), "", false));
-                    kpiGrid.add(UIUtils.createKPICard("Total Buku", String.valueOf(d.totalBooks), "", true));
-                    kpiGrid.add(UIUtils.createKPICard("Total Anggota", String.valueOf(d.totalMembers), "", true));
-                    kpiGrid.add(UIUtils.createKPICard("Anggota Baru", String.valueOf(d.newMembers), "", true));
-                    kpiGrid.add(UIUtils.createKPICard("Denda Belum Dibayar", String.format("Rp %,.0f", d.pendingFees), "", false));
-                    kpiGrid.revalidate();
-                    kpiGrid.repaint();
-
-                    // Populate Chart
-                    org.jfree.data.time.TimeSeries borrowedSeries = new org.jfree.data.time.TimeSeries("Dipinjam");
-                    org.jfree.data.time.TimeSeries returnedSeries = new org.jfree.data.time.TimeSeries("Dikembalikan");
-                    
-                    if (d.checkoutStats == null || d.checkoutStats.isEmpty()) {
-                        borrowedSeries.add(new org.jfree.data.time.Day(new java.util.Date()), 0);
-                        returnedSeries.add(new org.jfree.data.time.Day(new java.util.Date()), 0);
-                    } else {
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                        for (DailyStats stat : d.checkoutStats) {
-                            try {
-                                java.util.Date date = sdf.parse(stat.date);
-                                borrowedSeries.add(new org.jfree.data.time.Day(date), stat.borrowed);
-                                returnedSeries.add(new org.jfree.data.time.Day(date), stat.returned);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
-                    
-                    org.jfree.data.time.TimeSeriesCollection dataset = new org.jfree.data.time.TimeSeriesCollection();
-                    dataset.addSeries(borrowedSeries);
-                    dataset.addSeries(returnedSeries);
-                    
-                    org.jfree.chart.JFreeChart chart = org.jfree.chart.ChartFactory.createTimeSeriesChart(
-                        "", "", "", dataset, true, true, false
-                    );
-                    
-                    // Populate Chart
-                    chart.setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
-                    org.jfree.chart.plot.XYPlot plot = chart.getXYPlot();
-                    plot.setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
-                    plot.setOutlineVisible(false);
-                    plot.setDomainGridlinesVisible(false);
-                    plot.setRangeGridlinePaint(DesignSystem.SURFACE_CONTAINER_HIGH);
-
-                    org.jfree.chart.renderer.xy.XYSplineRenderer renderer = new org.jfree.chart.renderer.xy.XYSplineRenderer();
-                    renderer.setSeriesPaint(0, DesignSystem.PRIMARY);          // borrowed → brand red
-                    renderer.setSeriesStroke(0, new BasicStroke(2.5f));
-                    renderer.setSeriesPaint(1, DesignSystem.TERTIARY);         // returned → academic blue
-                    renderer.setSeriesStroke(1, new BasicStroke(2.5f));
-                    renderer.setDefaultShapesVisible(false);                   // premium clean spline look
-                    plot.setRenderer(renderer);
-
-                    chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);
-                    chart.getLegend().setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
-                    
-                    org.jfree.chart.axis.ValueAxis xAxis = plot.getDomainAxis();
-                    xAxis.setAxisLineVisible(false);
-                    xAxis.setTickMarksVisible(false);
-                    if (xAxis instanceof org.jfree.chart.axis.DateAxis) {
-                        ((org.jfree.chart.axis.DateAxis) xAxis).setDateFormatOverride(new java.text.SimpleDateFormat("EEE"));
-                    }
-                    
-                    org.jfree.chart.axis.ValueAxis yAxis = plot.getRangeAxis();
-                    yAxis.setAxisLineVisible(false);
-                    yAxis.setTickMarksVisible(false);
-                    
-                    org.jfree.chart.ChartPanel chartPanel = new org.jfree.chart.ChartPanel(chart);
-                    chartPanel.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
-                    
-                    BorderLayout layout = (BorderLayout) chartCard.getLayout();
-                    java.awt.Component centerComp = layout.getLayoutComponent(BorderLayout.CENTER);
-                    if (centerComp != null) chartCard.remove(centerComp);
-                    
-                    chartCard.add(chartPanel, BorderLayout.CENTER);
-                    chartCard.revalidate();
-                    chartCard.repaint();
-
+                    // Populate Circulation Grid
+                    circulationGrid.removeAll();
+                    circulationGrid.add(UIUtils.createKPICard("Buku Dipinjam", String.valueOf(d.borrowed), "Aktif", true));
+                    circulationGrid.add(UIUtils.createKPICard("Buku Dikembalikan", String.valueOf(d.returned), "Selesai", true));
+                    circulationGrid.add(UIUtils.createKPICard("Buku Terlambat", String.valueOf(d.overdue), "Perlu Tindakan", false));
+                    circulationGrid.add(UIUtils.createKPICard("Buku Hilang", String.valueOf(d.missing), "Total Hilang", false));
+                    circulationGrid.revalidate();
+                    circulationGrid.repaint();
+ 
+                    // Populate General Grid
+                    generalGrid.removeAll();
+                    generalGrid.add(UIUtils.createKPICard("Total Buku", String.valueOf(d.totalBooks), "Unit Koleksi", true));
+                    generalGrid.add(UIUtils.createKPICard("Total Anggota", String.valueOf(d.totalMembers), "Terdaftar", true));
+                    generalGrid.add(UIUtils.createKPICard("Anggota Baru", String.valueOf(d.newMembers), "Bulan Ini", true));
+                    generalGrid.add(UIUtils.createKPICard("Denda Belum Dibayar", String.format("Rp %,.0f", d.pendingFees), "Tagihan Aktif", false));
+                    generalGrid.revalidate();
+                    generalGrid.repaint();
+ 
                     // Populate Overdue Table
                     overdueModel.setRowCount(0);
                     for (Map<String, Object> row : d.overdueHistory) {
@@ -315,7 +234,7 @@ public class DashboardPanel extends JPanel {
                             row.get("dueDate"), row.get("fine")
                         });
                     }
-
+ 
                     // Populate Recent Table
                     recentModel.setRowCount(0);
                     for (Transaction tx : d.recentCheckouts) {
@@ -325,28 +244,20 @@ public class DashboardPanel extends JPanel {
                             tx.getIssueDate(), tx.getReturnDate() == null ? "-" : tx.getReturnDate()
                         });
                     }
+ 
 
-                    // Populate Top Books
-                    topBooksList.removeAll();
-                    if (d.topBooks.isEmpty()) {
-                        JLabel lblEmpty = new JLabel("Belum ada peminjaman.");
-                        lblEmpty.putClientProperty(FlatClientProperties.STYLE, "foreground: $Label.disabledForeground");
-                        lblEmpty.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-                        topBooksList.add(lblEmpty);
-                    } else {
-                        for (Book b : d.topBooks) {
-                            topBooksList.add(UIUtils.createTopBookItem(b.getTitle(), b.getAuthor()));
-                        }
-                    }
-                    topBooksList.revalidate();
-                    topBooksList.repaint();
-
+ 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    kpiGrid.removeAll();
-                    kpiGrid.add(new JLabel("Gagal memuat data dasbor."));
-                    kpiGrid.revalidate();
-                    kpiGrid.repaint();
+                    circulationGrid.removeAll();
+                    circulationGrid.add(new JLabel("Gagal memuat sirkulasi."));
+                    circulationGrid.revalidate();
+                    circulationGrid.repaint();
+                    
+                    generalGrid.removeAll();
+                    generalGrid.add(new JLabel("Gagal memuat data."));
+                    generalGrid.revalidate();
+                    generalGrid.repaint();
                 }
             }
         };

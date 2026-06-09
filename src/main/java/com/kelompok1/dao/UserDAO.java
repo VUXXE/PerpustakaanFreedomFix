@@ -30,7 +30,7 @@ public class UserDAO {
     }
 
     public boolean addUser(User user) throws SQLException {
-        String sql = "INSERT INTO users (username, password_hash, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, password_hash, full_name, email, phone, role, address) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, user.getUsername());
@@ -39,6 +39,7 @@ public class UserDAO {
             pstmt.setString(4, user.getEmail());
             pstmt.setString(5, user.getPhone());
             pstmt.setString(6, user.getRole());
+            pstmt.setString(7, user.getAddress());
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -114,9 +115,9 @@ public class UserDAO {
     public boolean updateUser(User user, boolean changePassword) throws SQLException {
         String sql;
         if (changePassword) {
-            sql = "UPDATE users SET username = ?, password_hash = ?, full_name = ?, email = ?, phone = ?, role = ?, status = ? WHERE user_id = ?";
+            sql = "UPDATE users SET username = ?, password_hash = ?, full_name = ?, email = ?, phone = ?, role = ?, status = ?, address = ? WHERE user_id = ?";
         } else {
-            sql = "UPDATE users SET username = ?, full_name = ?, email = ?, phone = ?, role = ?, status = ? WHERE user_id = ?";
+            sql = "UPDATE users SET username = ?, full_name = ?, email = ?, phone = ?, role = ?, status = ?, address = ? WHERE user_id = ?";
         }
 
         try (Connection conn = DatabaseHelper.getConnection();
@@ -131,6 +132,7 @@ public class UserDAO {
             pstmt.setString(idx++, user.getPhone());
             pstmt.setString(idx++, user.getRole());
             pstmt.setString(idx++, user.getStatus());
+            pstmt.setString(idx++, user.getAddress());
             pstmt.setInt(idx++, user.getUserId());
             return pstmt.executeUpdate() > 0;
         }
@@ -183,6 +185,11 @@ public class UserDAO {
         user.setPhone(rs.getString("phone"));
         user.setRole(rs.getString("role"));
         user.setStatus(rs.getString("status"));
+        try {
+            user.setAddress(rs.getString("address"));
+        } catch (SQLException e) {
+            // address might not exist yet or be missing in old results
+        }
         user.setCreatedAt(rs.getString("created_at"));
         return user;
     }
