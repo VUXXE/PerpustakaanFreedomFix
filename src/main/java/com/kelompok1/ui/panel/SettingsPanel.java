@@ -6,6 +6,7 @@ import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class SettingsPanel extends JPanel {
     private final SettingsService settingsService;
@@ -41,9 +42,8 @@ public class SettingsPanel extends JPanel {
         mainContent.setBackground(UIManager.getColor("Panel.background"));
         mainContent.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        // Card Panel for Settings Form
-        JPanel card = new JPanel(new GridBagLayout());
-        DesignSystem.applyCard(card);
+        // Card with proper rounded corners — uses UIUtils custom painted panel
+        JPanel card = UIUtils.createCardPanel(new GridBagLayout());
         card.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -53,13 +53,16 @@ public class SettingsPanel extends JPanel {
 
         // Form Fields
         spinDuration = new JSpinner(new SpinnerNumberModel(7, 1, 90, 1));
-        spinDuration.putClientProperty(FlatClientProperties.STYLE, "margin: 5, 8, 5, 8; arc: 8");
+        spinDuration.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        spinDuration.setPreferredSize(new Dimension(160, 36));
 
         spinMaxLimit = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
-        spinMaxLimit.putClientProperty(FlatClientProperties.STYLE, "margin: 5, 8, 5, 8; arc: 8");
+        spinMaxLimit.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        spinMaxLimit.setPreferredSize(new Dimension(160, 36));
 
         spinFineRate = new JSpinner(new SpinnerNumberModel(5000, 0, 100000, 500));
-        spinFineRate.putClientProperty(FlatClientProperties.STYLE, "margin: 5, 8, 5, 8; arc: 8");
+        spinFineRate.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        spinFineRate.setPreferredSize(new Dimension(160, 36));
 
         // Layout rows
         int row = 0;

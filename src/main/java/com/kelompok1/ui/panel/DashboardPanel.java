@@ -105,7 +105,9 @@ public class DashboardPanel extends JPanel {
         overdueCard.add(lblOverdueTitle, BorderLayout.NORTH);
         
         String[] colOverdue = {"ID Anggota", "Judul", "ISBN", "Tenggat Waktu", "Denda"};
-        overdueModel = new javax.swing.table.DefaultTableModel(new Object[][]{}, colOverdue);
+        overdueModel = new javax.swing.table.DefaultTableModel(new Object[][]{}, colOverdue) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+        };
         JTable tblOverdue = UIUtils.createStyledTable(new Object[][]{}, colOverdue);
         tblOverdue.setModel(overdueModel);
         JScrollPane scrollOverdue = new JScrollPane(tblOverdue);
@@ -144,7 +146,9 @@ public class DashboardPanel extends JPanel {
         recentCard.add(recentHeader, BorderLayout.NORTH);
 
         String[] colRecent = {"ID", "ID Buku", "Judul", "Anggota", "Tgl Pinjam", "Tgl Kembali"};
-        recentModel = new javax.swing.table.DefaultTableModel(new Object[][]{}, colRecent);
+        recentModel = new javax.swing.table.DefaultTableModel(new Object[][]{}, colRecent) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+        };
         JTable tblRecent = UIUtils.createStyledTable(new Object[][]{}, colRecent);
         tblRecent.setModel(recentModel);
         JScrollPane scrollRecent = new JScrollPane(tblRecent);
@@ -275,6 +279,7 @@ public class DashboardPanel extends JPanel {
                     renderer.setSeriesStroke(0, new BasicStroke(2.5f));
                     renderer.setSeriesPaint(1, DesignSystem.TERTIARY);         // returned → academic blue
                     renderer.setSeriesStroke(1, new BasicStroke(2.5f));
+                    renderer.setDefaultShapesVisible(false);                   // premium clean spline look
                     plot.setRenderer(renderer);
 
                     chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);

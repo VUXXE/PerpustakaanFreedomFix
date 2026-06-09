@@ -276,7 +276,8 @@ public class TransactionsPanel extends JPanel {
         lblBookTitle.putClientProperty(FlatClientProperties.STYLE, "font: -1");
 
         JSpinner spinDuration = new JSpinner(new SpinnerNumberModel(7, 1, 90, 1));
-        spinDuration.putClientProperty(FlatClientProperties.STYLE, "margin: 2, 5, 2, 5; arc: 8");
+        spinDuration.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        spinDuration.setPreferredSize(new Dimension(160, 36));
 
         SwingWorker<Integer, Void> durationLoader = new SwingWorker<>() {
             @Override
