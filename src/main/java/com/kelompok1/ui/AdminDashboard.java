@@ -8,6 +8,7 @@ import com.kelompok1.ui.panel.MembersPanel;
 import com.kelompok1.ui.panel.BooksPanel;
 import com.kelompok1.ui.panel.TransactionsPanel;
 import com.kelompok1.ui.panel.FinesPanel;
+import com.kelompok1.ui.panel.ReportsPanel;
 import com.kelompok1.ui.panel.SettingsPanel;
 import com.kelompok1.util.DesignSystem;
 import com.kelompok1.util.ThemeManager;
@@ -132,12 +133,14 @@ public class AdminDashboard extends JFrame {
         BooksPanel booksPanel = new BooksPanel();
         TransactionsPanel transactionsPanel = new TransactionsPanel();
         FinesPanel finesPanel = new FinesPanel();
+        ReportsPanel reportsPanel = new ReportsPanel();
 
         mainContent.add(new DashboardPanel(), "Dashboard");
         mainContent.add(membersPanel, "Members");
         mainContent.add(booksPanel, "Books");
         mainContent.add(transactionsPanel, "Transactions");
         mainContent.add(finesPanel, "Fines");
+        mainContent.add(reportsPanel, "Reports");
         mainContent.add(new SettingsPanel(), "Settings");
         mainContent.add(createHelpPanel(), "Help");
 

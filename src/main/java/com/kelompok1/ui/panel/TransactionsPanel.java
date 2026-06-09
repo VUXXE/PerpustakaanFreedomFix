@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.kelompok1.model.Book;
 import com.kelompok1.model.Transaction;
 import com.kelompok1.model.User;
+import com.kelompok1.report.ReportGenerator;
 import com.kelompok1.service.BookService;
 import com.kelompok1.service.FineService;
 import com.kelompok1.service.SettingsService;
@@ -14,7 +15,9 @@ import com.kelompok1.util.DesignSystem;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TransactionsPanel extends JPanel {
     private final TransactionService transactionService;
@@ -42,8 +45,10 @@ public class TransactionsPanel extends JPanel {
     private JSpinner spinDuration;
     private JButton btnReturnBook;
     private JButton btnIssueBook;
+    private JButton btnPrintReceipt;
     private JLabel lblError;
     private final int[] validatedUserId = new int[]{-1};
+    private int selectedTransactionId = -1;
 
     public TransactionsPanel() {
         this.transactionService = new TransactionService();
@@ -213,6 +218,11 @@ public class TransactionsPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
 
+        btnPrintReceipt = new JButton("Cetak Nota");
+        DesignSystem.applySecondaryButton(btnPrintReceipt);
+        btnPrintReceipt.setEnabled(false);
+        buttonPanel.add(btnPrintReceipt);
+
         btnReturnBook = new JButton("Kembalikan");
         DesignSystem.applyDangerButton(btnReturnBook);
         btnReturnBook.setEnabled(false);
@@ -278,13 +288,23 @@ public class TransactionsPanel extends JPanel {
             if (hasSelection) {
                 String status = (String) transactionsTableModel.getValueAt(selectedRow, 8);
                 btnReturnBook.setEnabled("Issued".equals(status));
+                selectedTransactionId = (Integer) transactionsTableModel.getValueAt(selectedRow, 0);
+                btnPrintReceipt.setEnabled(true);
 
                 // Populate inline fields
                 txtMemberCode.setText((String) transactionsTableModel.getValueAt(selectedRow, 3));
                 txtBookId.setText(String.valueOf(transactionsTableModel.getValueAt(selectedRow, 2)));
             } else {
                 btnReturnBook.setEnabled(false);
+                btnPrintReceipt.setEnabled(false);
+                selectedTransactionId = -1;
             }
+        });
+
+        // Print Receipt button listener
+        btnPrintReceipt.addActionListener(e -> {
+            if (selectedTransactionId == -1) return;
+            printReceipt(selectedTransactionId);
         });
 
         // Double-click row logic
@@ -465,8 +485,10 @@ public class TransactionsPanel extends JPanel {
         lblError.setText(" ");
 
         validatedUserId[0] = -1;
+        selectedTransactionId = -1;
 
         btnReturnBook.setEnabled(false);
+        btnPrintReceipt.setEnabled(false);
         btnIssueBook.setEnabled(true);
         transactionsTable.clearSelection();
 
@@ -532,9 +554,9 @@ public class TransactionsPanel extends JPanel {
         int bookId = Integer.parseInt(bookText);
         int duration = (Integer) spinDuration.getValue();
 
-        SwingWorker<Boolean, Void> issueWorker = new SwingWorker<>() {
+        SwingWorker<Integer, Void> issueWorker = new SwingWorker<>() {
             @Override
-            protected Boolean doInBackground() {
+            protected Integer doInBackground() {
                 return transactionService.issueBook(userId, bookId, duration);
             }
 
@@ -542,11 +564,21 @@ public class TransactionsPanel extends JPanel {
             protected void done() {
                 btnIssueBook.setEnabled(true);
                 try {
-                    boolean success = get();
-                    if (success) {
-                        JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dipinjamkan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                    int newTxId = get();
+                    if (newTxId > 0) {
                         loadTransactionsData(currentSearchQuery);
                         clearForm();
+                        // Ask user if they want to print receipt
+                        int choice = JOptionPane.showConfirmDialog(
+                            TransactionsPanel.this,
+                            "Buku berhasil dipinjamkan (Transaksi #" + newTxId + ").\nApakah Anda ingin mencetak nota transaksi?",
+                            "Pinjamkan Sukses",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE
+                        );
+                        if (choice == JOptionPane.YES_OPTION) {
+                            printReceipt(newTxId);
+                        }
                     } else {
                         lblError.setText("Gagal meminjamkan buku. Buku mungkin sedang kosong.");
                     }
@@ -662,5 +694,22 @@ public class TransactionsPanel extends JPanel {
             outputLabel.setText("❌ Format ID tidak valid");
             outputLabel.setForeground(new Color(230, 80, 80));
         }
+    }
+
+    /**
+     * Opens the JasperViewer with the transaction receipt for the given transaction ID.
+     * Runs the report compilation and fill in a background SwingWorker thread to keep the UI responsive.
+     */
+    private void printReceipt(int transactionId) {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                Map<String, Object> params = new HashMap<>();
+                params.put("transaction_id", transactionId);
+                ReportGenerator.showReportViewer("/reports/transaction_receipt.jrxml", params);
+                return null;
+            }
+        };
+        worker.execute();
     }
 }

@@ -24,6 +24,7 @@ public class SidebarPanel extends JPanel {
     private final SidebarNavButton btnAddBooks;
     private final SidebarNavButton btnCheckout;
     private final SidebarNavButton btnFines;
+    private final SidebarNavButton btnReports;
     private final SidebarNavButton btnSettings;
     private final SidebarNavButton btnHelp;
 
@@ -63,6 +64,7 @@ public class SidebarPanel extends JPanel {
         btnAddBooks  = createNavButton("Manajemen Buku", "Books");
         btnCheckout  = createNavButton("Transaksi",      "Transactions");
         btnFines     = createNavButton("Denda",          "Fines");
+        btnReports   = createNavButton("Laporan",        "Reports");
         btnSettings  = createNavButton("Pengaturan",     "Settings");
         btnHelp      = createNavButton("Bantuan",        "Help");
 
@@ -71,6 +73,7 @@ public class SidebarPanel extends JPanel {
         group.add(btnAddBooks);
         group.add(btnCheckout);
         group.add(btnFines);
+        group.add(btnReports);
         group.add(btnSettings);
         group.add(btnHelp);
         btnDashboard.setSelected(true);
@@ -84,6 +87,8 @@ public class SidebarPanel extends JPanel {
         add(btnCheckout);
         add(Box.createVerticalStrut(8));
         add(btnFines);
+        add(Box.createVerticalStrut(8));
+        add(btnReports);
         add(Box.createVerticalStrut(8));
         add(btnSettings);
         add(Box.createVerticalStrut(8));
@@ -138,6 +143,7 @@ public class SidebarPanel extends JPanel {
             case "Books"        -> btnAddBooks.setSelected(true);
             case "Transactions" -> btnCheckout.setSelected(true);
             case "Fines"        -> btnFines.setSelected(true);
+            case "Reports"      -> btnReports.setSelected(true);
             case "Settings"     -> btnSettings.setSelected(true);
             case "Help"         -> btnHelp.setSelected(true);
         }

@@ -14,7 +14,7 @@ public class TransactionService {
         this.transactionDAO = new TransactionDAO();
     }
 
-    public boolean issueBook(int userId, int bookId, int daysToBorrow) {
+    public int issueBook(int userId, int bookId, int daysToBorrow) {
         return transactionDAO.issueBook(userId, bookId, daysToBorrow);
     }
 

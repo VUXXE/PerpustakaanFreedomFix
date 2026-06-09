@@ -12,21 +12,21 @@ import java.time.format.DateTimeFormatter;
 
 public class TransactionDAO {
 
-    public boolean issueBook(int userId, int bookId, int daysToBorrow) {
+    public int issueBook(int userId, int bookId, int daysToBorrow) {
         String insertTx = "INSERT INTO transactions (book_id, user_id, issue_date, due_date) VALUES (?, ?, ?, ?)";
         String updateBook = "UPDATE books SET available_copies = available_copies - 1 WHERE book_id = ? AND available_copies > 0";
         
         try (Connection conn = DatabaseHelper.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement txStmt = conn.prepareStatement(insertTx);
-                 PreparedStatement bkStmt = conn.prepareStatement(updateBook)) {
+            try (PreparedStatement bkStmt = conn.prepareStatement(updateBook);
+                 PreparedStatement txStmt = conn.prepareStatement(insertTx, Statement.RETURN_GENERATED_KEYS)) {
                 
                 bkStmt.setInt(1, bookId);
                 int affectedRows = bkStmt.executeUpdate();
                 
                 if (affectedRows == 0) {
                     conn.rollback();
-                    return false; // Book not available
+                    return -1; // Book not available
                 }
                 
                 LocalDate today = LocalDate.now();
@@ -40,7 +40,14 @@ public class TransactionDAO {
                 
                 txStmt.executeUpdate();
                 conn.commit();
-                return true;
+
+                // Return the generated transaction_id
+                try (ResultSet generatedKeys = txStmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    }
+                }
+                return -1;
             } catch (SQLException ex) {
                 conn.rollback();
                 ex.printStackTrace();
@@ -48,7 +55,7 @@ public class TransactionDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return -1;
     }
 
     public boolean returnBook(int transactionId, int bookId) {

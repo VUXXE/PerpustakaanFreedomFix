@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" 
+              name="MembersReport" 
+              language="java"
+              pageWidth="595" pageHeight="842" 
+              columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" 
+             >
+    <property name="net.sf.jasperreports.compiler.xml.validation" value="false"/>
+    
+    <parameter name="role_filter" class="java.lang.String">
+        <defaultValueExpression><![CDATA["All"]]></defaultValueExpression>
+    </parameter>
+    <parameter name="status_filter" class="java.lang.String">
+        <defaultValueExpression><![CDATA["All"]]></defaultValueExpression>
+    </parameter>
+
+    <queryString>
+        <![CDATA[
+        SELECT user_id, member_code, username, full_name, email, phone, role, status 
+        FROM users 
+        WHERE 
+            ($P{role_filter} = 'All' OR role = $P{role_filter})
+            AND ($P{status_filter} = 'All' OR status = $P{status_filter})
+        ORDER BY user_id
+        ]]>
+    </queryString>
+    
+    <field name="user_id" class="java.lang.Integer"/>
+    <field name="member_code" class="java.lang.String"/>
+    <field name="username" class="java.lang.String"/>
+    <field name="full_name" class="java.lang.String"/>
+    <field name="email" class="java.lang.String"/>
+    <field name="phone" class="java.lang.String"/>
+    <field name="role" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+    
+    <title>
+        <band height="90" splitType="Stretch">
+            <!-- Header Background banner -->
+            <rectangle>
+                <reportElement mode="Opaque" x="0" y="0" width="555" height="70" backcolor="#86000D"/>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
+            <!-- Title -->
+            <staticText>
+                <reportElement x="20" y="10" width="320" height="30" forecolor="#FFFFFF"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="20" isBold="true"/>
+                </textElement>
+                <text><![CDATA[LAPORAN DIREKTORI ANGGOTA]]></text>
+            </staticText>
+            <!-- Subtitle -->
+            <staticText>
+                <reportElement x="20" y="40" width="320" height="20" forecolor="#ECEEF0"/>
+                <textElement verticalAlignment="Top">
+                    <font size="10" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[Sistem Informasi Perpustakaan Freedom]]></text>
+            </staticText>
+            <!-- Date Generated -->
+            <textField pattern="dd/MM/yyyy HH:mm">
+                <reportElement x="380" y="40" width="155" height="20" forecolor="#ECEEF0"/>
+                <textElement textAlignment="Right" verticalAlignment="Top">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+            </textField>
+            <!-- Filter Info -->
+            <textField>
+                <reportElement x="350" y="15" width="185" height="20" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Peran: " + ($P{role_filter}.equals("All") ? "Semua" : $P{role_filter}) + " | Status: " + ($P{status_filter}.equals("All") ? "Semua" : ($P{status_filter}.equals("Active") ? "Aktif" : "Ditangguhkan"))]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    
+    <columnHeader>
+        <band height="30" splitType="Stretch">
+            <line>
+                <reportElement positionType="FixRelativeToBottom" x="0" y="25" width="555" height="1" forecolor="#86000D"/>
+                <graphicElement>
+                    <pen lineWidth="1.5"/>
+                </graphicElement>
+            </line>
+            <staticText>
+                <reportElement x="0" y="0" width="75" height="20"/>
+                <textElement verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Kode Anggota]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="75" y="0" width="125" height="20"/>
+                <textElement verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Nama Lengkap]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="200" y="0" width="145" height="20"/>
+                <textElement verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Email]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="345" y="0" width="90" height="20"/>
+                <textElement verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Telepon]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="435" y="0" width="60" height="20"/>
+                <textElement verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Peran]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="495" y="0" width="60" height="20"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Status]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+    
+    <detail>
+        <band height="25" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="2" width="75" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{member_code} == null ? "" : $F{member_code}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="75" y="2" width="125" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{full_name}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="200" y="2" width="145" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="345" y="2" width="90" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{phone} == null || $F{phone}.isEmpty() ? "-" : $F{phone}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="435" y="2" width="60" height="20"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{role}.equals("Admin") ? "Admin" : "Anggota"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="495" y="2" width="60" height="20"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{status}.equals("Active") ? "Aktif" : "Ditangguhkan"]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement positionType="FixRelativeToBottom" x="0" y="24" width="555" height="1" forecolor="#ECEEF0"/>
+            </line>
+        </band>
+    </detail>
+    
+    <pageFooter>
+        <band height="30" splitType="Stretch">
+            <textField>
+                <reportElement x="435" y="5" width="80" height="20"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["Halaman "+$V{PAGE_NUMBER}+" dari"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="515" y="5" width="40" height="20"/>
+                <textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="0" y="5" width="150" height="20" forecolor="#5C5F61"/>
+                <textElement>
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[Perpustakaan Freedom - Laporan Sistem]]></text>
+            </staticText>
+        </band>
+    </pageFooter>
+</jasperReport>
