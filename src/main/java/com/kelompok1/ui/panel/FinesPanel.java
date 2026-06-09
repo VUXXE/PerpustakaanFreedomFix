@@ -1,9 +1,9 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.kelompok1.model.Fine;
 import com.kelompok1.service.FineService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -48,7 +48,7 @@ public class FinesPanel extends JPanel {
         // Local search bar removed, using header search bar
         
         JButton btnPayFine = new JButton("Proses Pembayaran");
-        btnPayFine.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; arc: 10");
+        DesignSystem.applyPrimaryButton(btnPayFine);
         btnPayFine.setEnabled(false);
         
         controlsPanel.add(btnPayFine);

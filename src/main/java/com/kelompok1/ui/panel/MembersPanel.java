@@ -1,9 +1,9 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.kelompok1.model.User;
 import com.kelompok1.service.UserService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -56,15 +56,15 @@ public class MembersPanel extends JPanel {
         
         // Local search bar removed, using header search bar
         
-        JButton btnRegisterUser = new JButton("Daftar Anggota");
-        btnRegisterUser.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; arc: 10");
-        
+        JButton btnRegisterUser = new JButton("+ Daftar Anggota");
+        DesignSystem.applyPrimaryButton(btnRegisterUser);
+
         JButton btnEditUser = new JButton("Ubah");
-        btnEditUser.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        DesignSystem.applySecondaryButton(btnEditUser);
         btnEditUser.setEnabled(false);
-        
+
         JButton btnDeleteUser = new JButton("Hapus");
-        btnDeleteUser.putClientProperty(FlatClientProperties.STYLE, "background: $Component.error.focusedBorderColor; foreground: #ffffff; arc: 10");
+        DesignSystem.applyDangerButton(btnDeleteUser);
         btnDeleteUser.setEnabled(false);
         
         controlsPanel.add(btnRegisterUser);
@@ -285,7 +285,7 @@ public class MembersPanel extends JPanel {
 
         JTextField txtUsername = UIUtils.createFormTextField("misal: johndoe");
         JPasswordField txtPassword = new JPasswordField(20);
-        txtPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true; margin: 5, 8, 5, 8; arc: 8");
+        txtPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true; margin: 6, 10, 6, 10; arc: 8");
         if (userToEdit != null) {
             txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Kosongkan jika tidak ingin diubah");
         } else {
@@ -293,14 +293,14 @@ public class MembersPanel extends JPanel {
         }
 
         JTextField txtFullName = UIUtils.createFormTextField("misal: John Doe");
-        JTextField txtEmail = UIUtils.createFormTextField("misal: johndoe@email.com");
-        JTextField txtPhone = UIUtils.createFormTextField("misal: 08123456789");
+        JTextField txtEmail    = UIUtils.createFormTextField("misal: johndoe@email.com");
+        JTextField txtPhone    = UIUtils.createFormTextField("misal: 08123456789");
 
         JComboBox<String> comboRole = new JComboBox<>(new String[]{"Member", "Admin"});
-        comboRole.putClientProperty(FlatClientProperties.STYLE, "margin: 2, 5, 2, 5; arc: 8");
-        
+        comboRole.putClientProperty(FlatClientProperties.STYLE, "margin: 6, 8, 6, 8; arc: 8");
+
         JComboBox<String> comboStatus = new JComboBox<>(new String[]{"Active", "Suspended"});
-        comboStatus.putClientProperty(FlatClientProperties.STYLE, "margin: 2, 5, 2, 5; arc: 8");
+        comboStatus.putClientProperty(FlatClientProperties.STYLE, "margin: 6, 8, 6, 8; arc: 8");
 
         if (userToEdit != null) {
             txtUsername.setText(userToEdit.getUsername());
@@ -313,53 +313,49 @@ public class MembersPanel extends JPanel {
 
         // Add fields in a 2-column layout
         int row = 0;
-        
-        // Row 0
-        gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(new JLabel("Nama Lengkap*"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(new JLabel("Nama Pengguna*"), gbc);
-        
-        row++;
-        gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(txtFullName, gbc);
-        gbc.gridx = 1;
-        formPanel.add(txtUsername, gbc);
 
-        // Row 2
-        row++;
         gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(new JLabel("Email*"), gbc);
+        JLabel lFullName = new JLabel("Nama Lengkap*"); lFullName.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lFullName.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lFullName, gbc);
         gbc.gridx = 1;
-        formPanel.add(new JLabel("Nomor Telepon"), gbc);
-        
-        row++;
-        gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(txtEmail, gbc);
-        gbc.gridx = 1;
-        formPanel.add(txtPhone, gbc);
+        JLabel lUsername = new JLabel("Nama Pengguna*"); lUsername.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lUsername.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lUsername, gbc);
 
-        // Row 4
         row++;
-        gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(new JLabel(userToEdit == null ? "Kata Sandi*" : "Kata Sandi"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(new JLabel("Peran Sistem"), gbc);
-        
-        row++;
-        gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(txtPassword, gbc);
-        gbc.gridx = 1;
-        formPanel.add(comboRole, gbc);
+        gbc.gridy = row; gbc.gridx = 0; formPanel.add(txtFullName, gbc);
+        gbc.gridx = 1; formPanel.add(txtUsername, gbc);
 
-        // Row 6
         row++;
         gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(new JLabel("Status Akun"), gbc);
-        
+        JLabel lEmail = new JLabel("Email*"); lEmail.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lEmail.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lEmail, gbc);
+        gbc.gridx = 1;
+        JLabel lPhone = new JLabel("Nomor Telepon"); lPhone.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lPhone.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lPhone, gbc);
+
+        row++;
+        gbc.gridy = row; gbc.gridx = 0; formPanel.add(txtEmail, gbc);
+        gbc.gridx = 1; formPanel.add(txtPhone, gbc);
+
         row++;
         gbc.gridy = row; gbc.gridx = 0;
-        formPanel.add(comboStatus, gbc);
+        JLabel lPass = new JLabel(userToEdit == null ? "Kata Sandi*" : "Kata Sandi"); lPass.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lPass.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lPass, gbc);
+        gbc.gridx = 1;
+        JLabel lRole = new JLabel("Peran Sistem"); lRole.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lRole.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lRole, gbc);
+
+        row++;
+        gbc.gridy = row; gbc.gridx = 0; formPanel.add(txtPassword, gbc);
+        gbc.gridx = 1; formPanel.add(comboRole, gbc);
+
+        row++;
+        gbc.gridy = row; gbc.gridx = 0;
+        JLabel lStatus = new JLabel("Status Akun"); lStatus.setFont(DesignSystem.bodyFont(12f, Font.BOLD)); lStatus.setForeground(DesignSystem.ON_SURFACE);
+        formPanel.add(lStatus, gbc);
+
+        row++;
+        gbc.gridy = row; gbc.gridx = 0; formPanel.add(comboStatus, gbc);
 
         JScrollPane scrollPane = new JScrollPane(formPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -374,10 +370,11 @@ public class MembersPanel extends JPanel {
         btnPanel.add(lblError);
 
         JButton btnCancel = new JButton("Batal");
+        DesignSystem.applySecondaryButton(btnCancel);
         btnCancel.addActionListener(e -> cardLayout.show(MembersPanel.this, "Table"));
 
         JButton btnSave = new JButton("Simpan Anggota");
-        btnSave.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; font: bold");
+        DesignSystem.applyPrimaryButton(btnSave);
         btnSave.addActionListener(e -> {
             String usernameStr = txtUsername.getText().trim();
             String passwordStr = new String(txtPassword.getPassword()).trim();

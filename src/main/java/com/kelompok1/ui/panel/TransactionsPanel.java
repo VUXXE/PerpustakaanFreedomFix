@@ -1,7 +1,6 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.kelompok1.model.Book;
 import com.kelompok1.model.Transaction;
 import com.kelompok1.model.User;
@@ -10,6 +9,7 @@ import com.kelompok1.service.FineService;
 import com.kelompok1.service.SettingsService;
 import com.kelompok1.service.TransactionService;
 import com.kelompok1.service.UserService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -61,11 +61,11 @@ public class TransactionsPanel extends JPanel {
         
         // Local search bar removed, using header search bar
         
-        JButton btnIssueBook = new JButton("Pinjamkan Buku");
-        btnIssueBook.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; arc: 10");
-        
+        JButton btnIssueBook = new JButton("+ Pinjamkan Buku");
+        DesignSystem.applyPrimaryButton(btnIssueBook);
+
         JButton btnReturnBook = new JButton("Kembalikan Buku");
-        btnReturnBook.putClientProperty(FlatClientProperties.STYLE, "arc: 10");
+        DesignSystem.applySecondaryButton(btnReturnBook);
         btnReturnBook.setEnabled(false);
         
         controlsPanel.add(btnIssueBook);
@@ -330,10 +330,11 @@ public class TransactionsPanel extends JPanel {
         btnPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Component.borderColor")));
 
         JButton btnCancel = new JButton("Batal");
+        DesignSystem.applySecondaryButton(btnCancel);
         btnCancel.addActionListener(e -> dialog.dispose());
 
         JButton btnSave = new JButton("Pinjamkan Buku");
-        btnSave.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; font: bold");
+        DesignSystem.applyPrimaryButton(btnSave);
         btnSave.addActionListener(e -> {
             String memberText = txtMemberCode.getText().trim();
             String bookText = txtBookId.getText().trim();

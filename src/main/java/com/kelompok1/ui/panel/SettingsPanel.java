@@ -2,6 +2,7 @@ package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.kelompok1.service.SettingsService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,8 +43,7 @@ public class SettingsPanel extends JPanel {
 
         // Card Panel for Settings Form
         JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(Color.WHITE);
-        card.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, $Component.borderColor;");
+        DesignSystem.applyCard(card);
         card.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -93,9 +93,10 @@ public class SettingsPanel extends JPanel {
         
         // Fine rate panel (with Rp prefix)
         JPanel finePanel = new JPanel(new BorderLayout(5, 0));
-        finePanel.setBackground(Color.WHITE);
+        finePanel.setOpaque(false);
         JLabel lblRp = new JLabel("Rp");
-        lblRp.putClientProperty(FlatClientProperties.STYLE, "font: bold");
+        lblRp.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+        lblRp.setForeground(DesignSystem.ON_SURFACE);
         finePanel.add(lblRp, BorderLayout.WEST);
         finePanel.add(spinFineRate, BorderLayout.CENTER);
         
@@ -103,7 +104,7 @@ public class SettingsPanel extends JPanel {
 
         // Save Button Row
         btnSave = new JButton("Simpan Pengaturan");
-        btnSave.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; font: bold; arc: 10; margin: 8, 20, 8, 20");
+        DesignSystem.applyPrimaryButton(btnSave);
         btnSave.addActionListener(e -> saveSettings());
         
         gbc.gridy = row++; gbc.gridx = 0; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.LINE_START;

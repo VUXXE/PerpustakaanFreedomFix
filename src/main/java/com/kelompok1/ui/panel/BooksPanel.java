@@ -1,9 +1,9 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.icons.FlatSearchIcon;
 import com.kelompok1.model.Book;
 import com.kelompok1.service.BookService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -47,22 +47,22 @@ public class BooksPanel extends JPanel {
         
         // Local search bar removed, using header search bar
         
-        JButton btnAddBook = new JButton("Tambah Buku");
-        btnAddBook.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; arc: 10; margin: 6, 16, 6, 16; font: bold");
-        
+        JButton btnAddBook = new JButton("+ Tambah Buku");
+        DesignSystem.applyPrimaryButton(btnAddBook);
+
         JButton btnEditBook = new JButton("Ubah");
-        btnEditBook.putClientProperty(FlatClientProperties.STYLE, "arc: 10; margin: 6, 16, 6, 16");
+        DesignSystem.applySecondaryButton(btnEditBook);
         btnEditBook.setEnabled(false);
-        
+
         JButton btnDeleteBook = new JButton("Hapus");
-        btnDeleteBook.putClientProperty(FlatClientProperties.STYLE, "background: $Component.error.focusedBorderColor; foreground: #ffffff; arc: 10; margin: 6, 16, 6, 16; font: bold");
+        DesignSystem.applyDangerButton(btnDeleteBook);
         btnDeleteBook.setEnabled(false);
-        
+
         controlsPanel.add(btnAddBook);
         controlsPanel.add(btnEditBook);
         controlsPanel.add(btnDeleteBook);
         headerPanel.add(controlsPanel, BorderLayout.EAST);
-        
+
         add(headerPanel, BorderLayout.NORTH);
         
         // --- TABLE (CENTER) ---
@@ -343,11 +343,11 @@ public class BooksPanel extends JPanel {
         btnPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIManager.getColor("Component.borderColor")));
 
         JButton btnCancel = new JButton("Batal");
-        btnCancel.putClientProperty(FlatClientProperties.STYLE, "arc: 10; margin: 6, 16, 6, 16");
+        DesignSystem.applySecondaryButton(btnCancel);
         btnCancel.addActionListener(e -> dialog.dispose());
 
         JButton btnSave = new JButton("Simpan");
-        btnSave.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #ffffff; font: bold; arc: 10; margin: 6, 16, 6, 16");
+        DesignSystem.applyPrimaryButton(btnSave);
         btnSave.addActionListener(e -> {
             String titleStr = txtTitle.getText().trim();
             if (titleStr.isEmpty()) {

@@ -8,6 +8,7 @@ import com.kelompok1.service.BookService;
 import com.kelompok1.service.FineService;
 import com.kelompok1.service.TransactionService;
 import com.kelompok1.service.UserService;
+import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,7 +90,7 @@ public class DashboardPanel extends JPanel {
                 g2.drawArc(80, 80, 100, 100, 0, 180);
             }
         };
-        chartPlaceholder.setBackground(Color.WHITE);
+        chartPlaceholder.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
         chartCard.add(chartPlaceholder, BorderLayout.CENTER);
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.45; gbc.insets = new Insets(0, 0, 0, 10);
@@ -130,12 +131,14 @@ public class DashboardPanel extends JPanel {
         JPanel recentCard = UIUtils.createCardPanel();
         recentCard.setLayout(new BorderLayout());
         JPanel recentHeader = new JPanel(new BorderLayout());
-        recentHeader.setBackground(Color.WHITE);
+        recentHeader.setOpaque(false);
         recentHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 10, 20));
         JLabel lblRecentTitle = new JLabel("Peminjaman Terbaru");
-        lblRecentTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +2");
+        lblRecentTitle.setFont(DesignSystem.displayFont(15f, Font.BOLD));
+        lblRecentTitle.setForeground(DesignSystem.ON_SURFACE);
         JLabel lblViewAll = new JLabel("Lihat Semua");
-        lblViewAll.putClientProperty(FlatClientProperties.STYLE, "foreground: $Component.accentColor; font: bold");
+        lblViewAll.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+        lblViewAll.setForeground(DesignSystem.TERTIARY);
         recentHeader.add(lblRecentTitle, BorderLayout.WEST);
         recentHeader.add(lblViewAll, BorderLayout.EAST);
         recentCard.add(recentHeader, BorderLayout.NORTH);
@@ -155,13 +158,16 @@ public class DashboardPanel extends JPanel {
         JPanel topBooksCard = UIUtils.createCardPanel();
         topBooksCard.setLayout(new BorderLayout());
         JPanel topBooksHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
-        topBooksHeader.setBackground(Color.WHITE);
+        topBooksHeader.setOpaque(false);
         JLabel lblTopBooks = new JLabel("Buku Terpopuler");
-        lblTopBooks.putClientProperty(FlatClientProperties.STYLE, "background: $Component.accentColor; foreground: #fff; opaque: true");
+        lblTopBooks.setFont(DesignSystem.bodyFont(12f, Font.BOLD));
+        lblTopBooks.putClientProperty(FlatClientProperties.STYLE,
+            "background: #86000d; foreground: #fff; opaque: true");
         lblTopBooks.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         JLabel lblNewArrivals = new JLabel("Buku Baru");
+        lblNewArrivals.setFont(DesignSystem.bodyFont(12f, Font.PLAIN));
         lblNewArrivals.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor")),
+            BorderFactory.createLineBorder(DesignSystem.OUTLINE_VARIANT),
             BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
         topBooksHeader.add(lblTopBooks);
@@ -170,9 +176,10 @@ public class DashboardPanel extends JPanel {
 
         topBooksList = new JPanel();
         topBooksList.setLayout(new BoxLayout(topBooksList, BoxLayout.Y_AXIS));
-        topBooksList.setBackground(Color.WHITE);
+        topBooksList.setOpaque(false);
         JLabel lblEmptyTopBooks = new JLabel("Memuat buku terpopuler...");
-        lblEmptyTopBooks.putClientProperty(FlatClientProperties.STYLE, "foreground: $Label.disabledForeground");
+        lblEmptyTopBooks.setFont(DesignSystem.bodyFont(13f, Font.PLAIN));
+        lblEmptyTopBooks.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         lblEmptyTopBooks.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         topBooksList.add(lblEmptyTopBooks);
         
@@ -255,22 +262,23 @@ public class DashboardPanel extends JPanel {
                         "", "", "", dataset, true, true, false
                     );
                     
-                    chart.setBackgroundPaint(Color.WHITE);
+                    // Populate Chart
+                    chart.setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
                     org.jfree.chart.plot.XYPlot plot = chart.getXYPlot();
-                    plot.setBackgroundPaint(Color.WHITE);
+                    plot.setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
                     plot.setOutlineVisible(false);
                     plot.setDomainGridlinesVisible(false);
-                    plot.setRangeGridlinePaint(new Color(230, 230, 230));
-                    
+                    plot.setRangeGridlinePaint(DesignSystem.SURFACE_CONTAINER_HIGH);
+
                     org.jfree.chart.renderer.xy.XYSplineRenderer renderer = new org.jfree.chart.renderer.xy.XYSplineRenderer();
-                    renderer.setSeriesPaint(0, new Color(101, 183, 108)); 
+                    renderer.setSeriesPaint(0, DesignSystem.PRIMARY);          // borrowed → brand red
                     renderer.setSeriesStroke(0, new BasicStroke(2.5f));
-                    renderer.setSeriesPaint(1, new Color(230, 80, 80)); 
+                    renderer.setSeriesPaint(1, DesignSystem.TERTIARY);         // returned → academic blue
                     renderer.setSeriesStroke(1, new BasicStroke(2.5f));
                     plot.setRenderer(renderer);
-                    
+
                     chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);
-                    chart.getLegend().setBackgroundPaint(Color.WHITE);
+                    chart.getLegend().setBackgroundPaint(DesignSystem.SURFACE_CONTAINER_LOWEST);
                     
                     org.jfree.chart.axis.ValueAxis xAxis = plot.getDomainAxis();
                     xAxis.setAxisLineVisible(false);
@@ -284,7 +292,7 @@ public class DashboardPanel extends JPanel {
                     yAxis.setTickMarksVisible(false);
                     
                     org.jfree.chart.ChartPanel chartPanel = new org.jfree.chart.ChartPanel(chart);
-                    chartPanel.setBackground(Color.WHITE);
+                    chartPanel.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
                     
                     BorderLayout layout = (BorderLayout) chartCard.getLayout();
                     java.awt.Component centerComp = layout.getLayoutComponent(BorderLayout.CENTER);

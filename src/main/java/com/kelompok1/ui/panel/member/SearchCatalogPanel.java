@@ -47,7 +47,7 @@ public class SearchCatalogPanel extends JPanel {
         txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Cari judul, penulis, kata kunci...");
         txtSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, new FlatSearchIcon());
         txtSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-        txtSearch.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4, 10, 4, 10; background: #ffffff");
+        txtSearch.putClientProperty(FlatClientProperties.STYLE, "arc: 999; margin: 4, 10, 4, 10");
         txtSearch.addActionListener(e -> {
             currentPage = 1;
             loadCatalogData(txtSearch.getText());
