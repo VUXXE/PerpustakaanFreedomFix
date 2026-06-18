@@ -8,9 +8,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseHelper {
-    private static final String DB_URL = "jdbc:postgresql://db.darwxjnptymxwcpjwstr.supabase.co:5432/postgres";
-    private static final String DB_USER = "postgres";
-    private static final String DB_PASSWORD = "021177Hersa021177";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/perpustakaan?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
 
     private static HikariDataSource dataSource;
 
@@ -37,7 +37,7 @@ public class DatabaseHelper {
             
             // 1. USERS TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
-                    "user_id SERIAL PRIMARY KEY, " +
+                    "user_id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "username VARCHAR(255) NOT NULL UNIQUE, " +
                     "password_hash TEXT NOT NULL, " +
                     "full_name TEXT NOT NULL, " +
@@ -64,11 +64,11 @@ public class DatabaseHelper {
             }
             
             // Auto-fill member_code for existing users
-            stmt.execute("UPDATE users SET member_code = 'MEM-' || LPAD(CAST(user_id AS VARCHAR), 4, '0') WHERE member_code IS NULL;");
+            stmt.execute("UPDATE users SET member_code = CONCAT('MEM-', LPAD(CAST(user_id AS CHAR), 4, '0')) WHERE member_code IS NULL;");
 
             // 2. BOOKS TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS books (" +
-                    "book_id SERIAL PRIMARY KEY, " +
+                    "book_id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "series_title VARCHAR(500), " +
                     "title VARCHAR(500) NOT NULL, " +
                     "author VARCHAR(500), " +
@@ -86,7 +86,7 @@ public class DatabaseHelper {
 
             // 3. TRANSACTIONS TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS transactions (" +
-                    "transaction_id SERIAL PRIMARY KEY, " +
+                    "transaction_id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "book_id INTEGER NOT NULL, " +
                     "user_id INTEGER NOT NULL, " +
                     "issue_date TEXT NOT NULL, " +
@@ -99,7 +99,7 @@ public class DatabaseHelper {
 
             // 4. FINES TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS fines (" +
-                    "fine_id SERIAL PRIMARY KEY, " +
+                    "fine_id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "transaction_id INTEGER NOT NULL UNIQUE, " +
                     "amount REAL NOT NULL DEFAULT 0.00 CHECK (amount >= 0), " +
                     "status VARCHAR(50) NOT NULL DEFAULT 'Unpaid' CHECK(status IN ('Unpaid', 'Paid')), " +
@@ -114,15 +114,14 @@ public class DatabaseHelper {
                     ");");
 
             // Seed default settings if empty
-            stmt.execute("INSERT INTO settings (key, value) VALUES ('fine_rate', '5000') ON CONFLICT (key) DO NOTHING;");
-            stmt.execute("INSERT INTO settings (key, value) VALUES ('borrow_duration', '7') ON CONFLICT (key) DO NOTHING;");
-            stmt.execute("INSERT INTO settings (key, value) VALUES ('max_borrow_limit', '3') ON CONFLICT (key) DO NOTHING;");
+            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('fine_rate', '5000');");
+            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('borrow_duration', '7');");
+            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('max_borrow_limit', '3');");
 
             // Insert default admin if not exists
             String adminHash = com.kelompok1.util.PasswordUtil.hashPassword("admin123");
-            stmt.execute("INSERT INTO users (username, password_hash, full_name, email, phone, role) " +
-                    "VALUES ('admin', '" + adminHash + "', 'System Administrator', 'admin@library.com', '000000', 'Admin') " +
-                    "ON CONFLICT (username) DO NOTHING;");
+            stmt.execute("INSERT IGNORE INTO users (username, password_hash, full_name, email, phone, role) " +
+                    "VALUES ('admin', '" + adminHash + "', 'System Administrator', 'admin@library.com', '000000', 'Admin');");
 
             System.out.println("Database initialized successfully.");
 

@@ -1,10 +1,7 @@
 package com.kelompok1.util;
 
 import com.kelompok1.config.DatabaseHelper;
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
 
-import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.Statement;
 
@@ -16,16 +13,18 @@ public class DbSetup {
              Statement stmt = conn.createStatement()) {
             
             System.out.println("0. Dropping all existing tables to start fresh...");
-            stmt.execute("DROP TABLE IF EXISTS fines CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS transactions CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS books CASCADE");
-            stmt.execute("DROP TABLE IF EXISTS users CASCADE");
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 0");
+            stmt.execute("DROP TABLE IF EXISTS fines");
+            stmt.execute("DROP TABLE IF EXISTS transactions");
+            stmt.execute("DROP TABLE IF EXISTS books");
+            stmt.execute("DROP TABLE IF EXISTS users");
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
             
             System.out.println("0.5. Re-initializing database schemas...");
             DatabaseHelper.initializeDatabase();
 
             System.out.println("1. Creating temporary table...");
-            stmt.execute("DROP TABLE IF EXISTS temp_books_csv CASCADE");
+            stmt.execute("DROP TABLE IF EXISTS temp_books_csv");
             stmt.execute("CREATE TABLE temp_books_csv (" +
                     "biblio_id TEXT, gmd_id TEXT, title TEXT, sor TEXT, edition TEXT, " +
                     "isbn_issn TEXT, publisher_id TEXT, publish_year TEXT, \"collation\" TEXT, " +
@@ -37,13 +36,12 @@ public class DbSetup {
                     "last_update TEXT, uid TEXT)");
             
             System.out.println("2. Importing data from Books.csv (This might take a few seconds)...");
-            CopyManager copyManager = new CopyManager(conn.unwrap(BaseConnection.class));
-            try (FileReader reader = new FileReader("Books.csv")) {
-                long rowsInserted = copyManager.copyIn("COPY temp_books_csv FROM STDIN WITH (FORMAT csv, DELIMITER ';', HEADER true, QUOTE '\"')", reader);
-                System.out.println("Imported " + rowsInserted + " rows to temporary table.");
-            }
+            stmt.execute("LOAD DATA LOCAL INFILE 'Books.csv' INTO TABLE temp_books_csv FIELDS TERMINATED BY ';' ENCLOSED BY '\"' IGNORE 1 LINES");
+            System.out.println("Imported rows to temporary table.");
 
-            stmt.execute("TRUNCATE TABLE books CASCADE");
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 0");
+            stmt.execute("TRUNCATE TABLE books");
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
 
             System.out.println("4. Transferring mapped data to main books table...");
             stmt.execute("INSERT INTO books (" +

@@ -3,7 +3,7 @@
 -- psql "postgresql://postgres:021177Hersa021177@db.darwxjnptymxwcpjwstr.supabase.co:5432/postgres" -f db_setup.sql
 
 -- 1. Create a temporary table to hold all 29 columns from the CSV
-DROP TABLE IF EXISTS temp_books_csv CASCADE;
+DROP TABLE IF EXISTS temp_books_csv;
 CREATE TABLE temp_books_csv (
     biblio_id TEXT, gmd_id TEXT, title TEXT, sor TEXT, edition TEXT,
     isbn_issn TEXT, publisher_id TEXT, publish_year TEXT, collation TEXT,
@@ -16,12 +16,12 @@ CREATE TABLE temp_books_csv (
 );
 
 -- 2. Import all data from CSV into the temporary table
--- Note: \copy is a psql command that runs client-side to read the local file.
-\copy temp_books_csv FROM 'Books.csv' DELIMITER ';' CSV HEADER;
+-- Note: LOAD DATA LOCAL INFILE requires the mysql client to be run with --local-infile=1
+LOAD DATA LOCAL INFILE 'Books.csv' INTO TABLE temp_books_csv FIELDS TERMINATED BY ';' ENCLOSED BY '"' IGNORE 1 LINES;
 
 -- 3. Create the clean table with exactly the columns requested
 CREATE TABLE IF NOT EXISTS books (
-    book_id SERIAL PRIMARY KEY,
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
     series_title VARCHAR(500),
     title VARCHAR(500) NOT NULL,
     author VARCHAR(500),
@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS books (
 );
 
 -- Clear the table if it already exists before importing
-TRUNCATE TABLE books CASCADE;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE books;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- 4. Transfer only the requested columns from temp to the actual table
 INSERT INTO books (
