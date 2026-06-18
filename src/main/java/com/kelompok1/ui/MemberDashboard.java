@@ -4,20 +4,30 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.kelompok1.ui.panel.member.BorrowedBooksPanel;
 import com.kelompok1.ui.panel.member.FinesLedgerPanel;
 import com.kelompok1.ui.panel.member.SearchCatalogPanel;
+import com.kelompok1.ui.panel.member.MemberHomePanel;
 import com.kelompok1.util.DesignSystem;
 import com.kelompok1.util.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class MemberDashboard extends JFrame {
+public class MemberDashboard extends JFrame implements MemberSidebarPanel.SidebarListener {
 
     private com.kelompok1.model.User loggedInUser;
+    
+    private CardLayout cardLayout;
+    private JPanel mainContentPanel;
+    private MemberSidebarPanel sidebar;
+
+    private MemberHomePanel homePanel;
+    private SearchCatalogPanel catalogPanel;
+    private BorrowedBooksPanel borrowedPanel;
+    private FinesLedgerPanel finesPanel;
 
     public MemberDashboard(com.kelompok1.model.User user) {
         this.loggedInUser = user;
         setTitle("Perpustakaan Freedom — Anggota");
-        setSize(1000, 700);
+        setSize(1100, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         getContentPane().setBackground(DesignSystem.SURFACE);
@@ -27,84 +37,71 @@ public class MemberDashboard extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        // ─── Top Navigation Bar ───────────────────────────
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
-        topPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, DesignSystem.OUTLINE_VARIANT),
-            BorderFactory.createEmptyBorder(0, 24, 0, 24)
-        ));
-        topPanel.setPreferredSize(new Dimension(getWidth(), 64));
+        // 1. Sidebar
+        sidebar = new MemberSidebarPanel(loggedInUser, this);
+        add(sidebar, BorderLayout.WEST);
 
-        // Brand + welcome
-        JPanel leftHead = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
-        leftHead.setOpaque(false);
+        // 2. Main Area Container
+        JPanel mainArea = new JPanel(new BorderLayout());
+        mainArea.setBackground(DesignSystem.SURFACE);
 
-        JLabel lblBrand = new JLabel("Perpustakaan Freedom");
-        lblBrand.setFont(DesignSystem.displayFont(15f, Font.BOLD));
-        lblBrand.setForeground(DesignSystem.PRIMARY);
-
-        JSeparator vSep = new JSeparator(SwingConstants.VERTICAL);
-        vSep.setPreferredSize(new Dimension(1, 20));
-        vSep.setForeground(DesignSystem.OUTLINE_VARIANT);
-
-        JLabel lblHeader = new JLabel("Selamat datang, " + loggedInUser.getFullName());
-        lblHeader.setFont(DesignSystem.bodyFont(13f, Font.PLAIN));
-        lblHeader.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-
-        leftHead.add(lblBrand);
-        leftHead.add(vSep);
-        leftHead.add(lblHeader);
-        topPanel.add(leftHead, BorderLayout.WEST);
-
-        // Right actions
-        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        actionsPanel.setOpaque(false);
-
+        // Top Bar (Theme Toggle)
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 12));
+        topBar.setBackground(DesignSystem.SURFACE);
         JButton btnTheme = new JButton(ThemeManager.getToggleLabel());
         btnTheme.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
         btnTheme.putClientProperty(FlatClientProperties.STYLE, "arc: 8; margin: 4, 12, 4, 12");
-        btnTheme.addActionListener(e -> toggleTheme(btnTheme));
-
-        JButton btnLogout = new JButton("Keluar");
-        btnLogout.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
-        btnLogout.putClientProperty(FlatClientProperties.STYLE,
-            "foreground: #ba1a1a; arc: 8; margin: 4, 12, 4, 12; " +
-            "background: null; borderWidth: 0; focusWidth: 0");
-        btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnLogout.addActionListener(e -> {
-            new LoginView().setVisible(true);
-            this.dispose();
+        btnTheme.addActionListener(e -> {
+            ThemeManager.toggleTheme(this);
+            btnTheme.setText(ThemeManager.getToggleLabel());
         });
+        topBar.add(btnTheme);
+        mainArea.add(topBar, BorderLayout.NORTH);
 
-        actionsPanel.add(btnTheme);
-        actionsPanel.add(btnLogout);
-        topPanel.add(actionsPanel, BorderLayout.EAST);
+        // Card Content
+        cardLayout = new CardLayout();
+        mainContentPanel = new JPanel(cardLayout);
+        mainContentPanel.setBackground(DesignSystem.SURFACE);
+        mainContentPanel.setBorder(BorderFactory.createEmptyBorder(0, 8, 16, 16));
 
-        add(topPanel, BorderLayout.NORTH);
+        // Initialize Panels
+        homePanel = new MemberHomePanel(loggedInUser);
+        catalogPanel = new SearchCatalogPanel();
+        borrowedPanel = new BorrowedBooksPanel(loggedInUser.getUserId());
+        finesPanel = new FinesLedgerPanel(loggedInUser.getUserId());
 
-        // ─── Tabs ─────────────────────────────────────────
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.putClientProperty(FlatClientProperties.STYLE,
-            "tabType: pill; " +
-            "tabInsets: 8, 20, 8, 20; " +
-            "tabAreaInsets: 16, 20, 0, 20; " +
-            "tabHeight: 36; " +
-            "selectedBackground: #86000d; " +
-            "selectedForeground: #ffffff; " +
-            "background: $Panel.background"
-        );
-        tabs.setFont(DesignSystem.bodyFont(13f, Font.PLAIN));
+        mainContentPanel.add(homePanel, "Dashboard");
+        mainContentPanel.add(catalogPanel, "Catalog");
+        mainContentPanel.add(borrowedPanel, "Borrowed");
+        mainContentPanel.add(finesPanel, "Fines");
 
-        tabs.addTab("Katalog Buku",  new SearchCatalogPanel());
-        tabs.addTab("Pinjaman Saya", new BorrowedBooksPanel(loggedInUser.getUserId()));
-        tabs.addTab("Tagihan Denda", new FinesLedgerPanel(loggedInUser.getUserId()));
+        mainArea.add(mainContentPanel, BorderLayout.CENTER);
+        add(mainArea, BorderLayout.CENTER);
 
-        add(tabs, BorderLayout.CENTER);
+        // Show Dashboard by default
+        onTabSelected("Dashboard");
     }
 
-    private void toggleTheme(JButton btnTheme) {
-        ThemeManager.toggleTheme(this);
-        btnTheme.setText(ThemeManager.getToggleLabel());
+    @Override
+    public void onTabSelected(String tabName) {
+        cardLayout.show(mainContentPanel, tabName);
+        
+        // Refresh data when tabs are opened
+        if (tabName.equals("Dashboard")) {
+            homePanel.refreshData();
+        } else if (tabName.equals("Borrowed")) {
+            borrowedPanel.refreshTable();
+        } else if (tabName.equals("Fines")) {
+            finesPanel.refreshTable();
+        }
+    }
+
+    @Override
+    public void onLogout() {
+        int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin keluar?", "Konfirmasi Keluar", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            new LoginView().setVisible(true);
+            this.dispose();
+        }
     }
 }

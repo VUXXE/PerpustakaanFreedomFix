@@ -115,4 +115,8 @@ public class BorrowedBooksPanel extends JPanel {
         };
         worker.execute();
     }
+
+    public void refreshTable() {
+        loadBorrowedData();
+    }
 }

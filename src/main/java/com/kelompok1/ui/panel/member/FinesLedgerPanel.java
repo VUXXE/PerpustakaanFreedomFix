@@ -109,4 +109,8 @@ public class FinesLedgerPanel extends JPanel {
         };
         worker.execute();
     }
+
+    public void refreshTable() {
+        loadFinesData();
+    }
 }

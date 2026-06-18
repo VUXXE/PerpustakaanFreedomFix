@@ -70,17 +70,16 @@ public class FineDAO {
 
     public void assessFines() {
         // Logic to calculate overdue transactions and create fines using the dynamic fine rate setting
-        String sql = "INSERT INTO fines (transaction_id, amount) " +
-                     "SELECT transaction_id, (CURRENT_DATE - due_date::date) * COALESCE((SELECT value::double precision FROM settings WHERE key = 'fine_rate'), 5000.0) " +
+        String sql = "INSERT IGNORE INTO fines (transaction_id, amount) " +
+                     "SELECT transaction_id, DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE key = 'fine_rate'), 5000.0) " +
                      "FROM transactions " +
-                     "WHERE status = 'Issued' AND CURRENT_DATE > due_date::date " +
-                     "ON CONFLICT (transaction_id) DO NOTHING";
+                     "WHERE status = 'Issued' AND CURDATE() > CAST(due_date AS DATE)";
         try (Connection conn = DatabaseHelper.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
             
             // Update existing unpaid fines
-            String updateSql = "UPDATE fines SET amount = (SELECT (CURRENT_DATE - due_date::date) * COALESCE((SELECT value::double precision FROM settings WHERE key = 'fine_rate'), 5000.0) " +
+            String updateSql = "UPDATE fines SET amount = (SELECT DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE key = 'fine_rate'), 5000.0) " +
                                "FROM transactions WHERE transactions.transaction_id = fines.transaction_id) " +
                                "WHERE status = 'Unpaid'";
             stmt.executeUpdate(updateSql);
@@ -138,6 +137,20 @@ public class FineDAO {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) return rs.getDouble(1);
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0.0;
+    }
+
+    public double getTotalPendingFeesByUser(int userId) {
+        String sql = "SELECT SUM(f.amount) FROM fines f " +
+                     "JOIN transactions t ON f.transaction_id = t.transaction_id " +
+                     "WHERE f.status = 'Unpaid' AND t.user_id = ?";
+        try (Connection conn = DatabaseHelper.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+            }
         } catch (SQLException e) { e.printStackTrace(); }
         return 0.0;
     }
