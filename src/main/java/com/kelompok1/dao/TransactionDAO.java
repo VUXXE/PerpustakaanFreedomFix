@@ -137,7 +137,7 @@ public class TransactionDAO {
                      "FROM transactions t " +
                      "JOIN books b ON t.book_id = b.book_id " +
                      "JOIN users u ON t.user_id = u.user_id " +
-                     "WHERE b.title ILIKE ? OR u.full_name ILIKE ? OR t.status ILIKE ? " +
+                     "WHERE b.title LIKE ? OR u.full_name LIKE ? OR t.status LIKE ? " +
                      "ORDER BY t.transaction_id DESC LIMIT ? OFFSET ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -188,7 +188,7 @@ public class TransactionDAO {
     }
 
     public int getOverdueCount() {
-        String sql = "SELECT COUNT(*) FROM transactions WHERE status = 'Issued' AND due_date::date < CURRENT_DATE";
+        String sql = "SELECT COUNT(*) FROM transactions WHERE status = 'Issued' AND CAST(due_date AS DATE) < CURDATE()";
         try (Connection conn = DatabaseHelper.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -249,7 +249,7 @@ public class TransactionDAO {
                      "JOIN books b ON t.book_id = b.book_id " +
                      "JOIN users u ON t.user_id = u.user_id " +
                      "LEFT JOIN fines f ON t.transaction_id = f.transaction_id " +
-                     "WHERE t.status = 'Issued' AND t.due_date::date < CURRENT_DATE " +
+                     "WHERE t.status = 'Issued' AND CAST(t.due_date AS DATE) < CURDATE() " +
                      "ORDER BY t.due_date ASC LIMIT ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

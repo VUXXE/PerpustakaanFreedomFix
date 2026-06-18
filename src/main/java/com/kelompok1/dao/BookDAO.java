@@ -11,7 +11,7 @@ public class BookDAO {
 
     public List<Book> searchBooks(String query, int limit, int offset) {
         List<Book> books = new ArrayList<>();
-        String sql = "SELECT * FROM books WHERE title ILIKE ? OR author ILIKE ? OR classification ILIKE ? ORDER BY book_id ASC LIMIT ? OFFSET ?";
+        String sql = "SELECT * FROM books WHERE title LIKE ? OR author LIKE ? OR classification LIKE ? ORDER BY book_id ASC LIMIT ? OFFSET ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             String q = "%" + query + "%";

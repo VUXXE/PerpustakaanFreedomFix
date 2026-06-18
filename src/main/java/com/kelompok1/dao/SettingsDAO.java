@@ -23,7 +23,7 @@ public class SettingsDAO {
 
     public boolean setSetting(String key, String value) {
         String sql = "INSERT INTO settings (key, value) VALUES (?, ?) " +
-                     "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value";
+                     "ON DUPLICATE KEY UPDATE value = VALUES(value)";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, key);

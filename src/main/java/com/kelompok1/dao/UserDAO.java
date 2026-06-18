@@ -149,7 +149,7 @@ public class UserDAO {
 
     public List<User> searchUsers(String query, int limit, int offset) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users WHERE username ILIKE ? OR full_name ILIKE ? OR email ILIKE ? OR member_code ILIKE ? ORDER BY user_id ASC LIMIT ? OFFSET ?";
+        String sql = "SELECT * FROM users WHERE username LIKE ? OR full_name LIKE ? OR email LIKE ? OR member_code LIKE ? ORDER BY user_id ASC LIMIT ? OFFSET ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             String q = "%" + query + "%";

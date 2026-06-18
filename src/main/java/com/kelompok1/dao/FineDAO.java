@@ -95,7 +95,7 @@ public class FineDAO {
                      "JOIN transactions t ON f.transaction_id = t.transaction_id " +
                      "JOIN users u ON t.user_id = u.user_id " +
                      "JOIN books b ON t.book_id = b.book_id " +
-                     "WHERE u.full_name ILIKE ? OR b.title ILIKE ? OR f.status ILIKE ? " +
+                     "WHERE u.full_name LIKE ? OR b.title LIKE ? OR f.status LIKE ? " +
                      "ORDER BY f.fine_id DESC LIMIT ? OFFSET ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
