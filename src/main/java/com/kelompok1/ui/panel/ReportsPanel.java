@@ -1,22 +1,36 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.kelompok1.model.Book;
+import com.kelompok1.model.DailyStats;
 import com.kelompok1.report.ReportGenerator;
+import com.kelompok1.service.BookService;
+import com.kelompok1.service.TransactionService;
+import com.kelompok1.util.ChartUtils;
 import com.kelompok1.util.DesignSystem;
+import org.jfree.chart.ChartPanel;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Modern dashboard panel for generating and exporting system reports.
+ * Modern dashboard panel for generating system reports and viewing analytics charts.
  */
 public class ReportsPanel extends JPanel {
 
+    private final BookService bookService;
+    private final TransactionService transactionService;
+    private JPanel analyticsContentPanel;
+
     public ReportsPanel() {
+        this.bookService = new BookService();
+        this.transactionService = new TransactionService();
         setLayout(new BorderLayout());
         setBackground(UIManager.getColor("Panel.background"));
         setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
@@ -29,18 +43,35 @@ public class ReportsPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(UIManager.getColor("Panel.background"));
 
-        JLabel title = new JLabel("Laporan Sistem");
+        JLabel title = new JLabel("Laporan & Analisis Sistem");
         title.putClientProperty(FlatClientProperties.STYLE, "font: bold +6");
         headerPanel.add(title, BorderLayout.WEST);
 
-        JLabel subtitle = new JLabel("Cetak laporan dan unduh dokumen PDF secara dinamis.");
+        JLabel subtitle = new JLabel("Cetak laporan dokumen PDF atau pantau grafik aktivitas perpustakaan.");
         subtitle.setFont(DesignSystem.bodyFont(13f, Font.ITALIC));
         subtitle.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         headerPanel.add(subtitle, BorderLayout.SOUTH);
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // ─── 2. CONTENT PANEL (CENTER) ─────────────────────────────────────────
+        // ─── 2. TABBED PANE (CENTER) ─────────────────────────────────────────
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.putClientProperty(FlatClientProperties.STYLE, "tabHeight: 40; showTabSeparators: true");
+
+        tabbedPane.addTab("Laporan Resmi (PDF)", createPdfReportsPanel());
+        tabbedPane.addTab("Analisis Grafik", createAnalyticsPanel());
+
+        // Load data when analytics tab is opened
+        tabbedPane.addChangeListener(e -> {
+            if (tabbedPane.getSelectedIndex() == 1) {
+                loadAnalyticsData();
+            }
+        });
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    private JScrollPane createPdfReportsPanel() {
         JPanel mainGrid = new JPanel(new GridLayout(2, 2, 20, 20));
         mainGrid.setOpaque(false);
         mainGrid.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
@@ -55,7 +86,91 @@ public class ReportsPanel extends JPanel {
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        add(scrollPane, BorderLayout.CENTER);
+        return scrollPane;
+    }
+
+    private JPanel createAnalyticsPanel() {
+        analyticsContentPanel = new JPanel(new GridLayout(1, 2, 20, 20));
+        analyticsContentPanel.setOpaque(false);
+        analyticsContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        
+        JLabel loadingLabel = new JLabel("Memuat Grafik...", SwingConstants.CENTER);
+        loadingLabel.setFont(DesignSystem.displayFont(14f, Font.ITALIC));
+        analyticsContentPanel.add(loadingLabel);
+        
+        return analyticsContentPanel;
+    }
+
+    private void loadAnalyticsData() {
+        analyticsContentPanel.removeAll();
+        JLabel loadingLabel = new JLabel("Memuat Grafik...", SwingConstants.CENTER);
+        loadingLabel.setFont(DesignSystem.displayFont(14f, Font.ITALIC));
+        analyticsContentPanel.add(loadingLabel);
+        analyticsContentPanel.revalidate();
+        analyticsContentPanel.repaint();
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            List<DailyStats> stats;
+            List<Book> topBooks;
+
+            @Override
+            protected Void doInBackground() {
+                stats = transactionService.getCheckoutStats();
+                topBooks = bookService.getTopBooks(5);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                analyticsContentPanel.removeAll();
+                try {
+                    // Line Chart
+                    DefaultCategoryDataset lineDataset = new DefaultCategoryDataset();
+                    for (DailyStats s : stats) {
+                        lineDataset.addValue(s.borrowed, "Buku Dipinjam", s.date);
+                        lineDataset.addValue(s.returned, "Buku Dikembalikan", s.date);
+                    }
+                    ChartPanel lineChartPanel = ChartUtils.createCirculationLineChart(lineDataset, "Tren Sirkulasi 7 Hari Terakhir");
+
+                    JPanel lineCard = UIUtils.createCardPanel(new BorderLayout());
+                    lineCard.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+                    JLabel lblLineTitle = new JLabel("Tren Sirkulasi 7 Hari Terakhir");
+                    lblLineTitle.setFont(DesignSystem.displayFont(15f, Font.BOLD));
+                    lblLineTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+                    lineCard.add(lblLineTitle, BorderLayout.NORTH);
+                    lineCard.add(lineChartPanel, BorderLayout.CENTER);
+                    analyticsContentPanel.add(lineCard);
+
+                    // Bar Chart
+                    DefaultCategoryDataset barDataset = new DefaultCategoryDataset();
+                    for (Book b : topBooks) {
+                        // Use a shorter title for the bar chart
+                        String shortTitle = b.getTitle();
+                        if (shortTitle.length() > 25) {
+                            shortTitle = shortTitle.substring(0, 25) + "...";
+                        }
+                        barDataset.addValue(b.getCheckoutCount(), "Dipinjam", shortTitle);
+                    }
+                    ChartPanel barChartPanel = ChartUtils.createTopBooksBarChart(barDataset, "5 Buku Terlaris");
+
+                    JPanel barCard = UIUtils.createCardPanel(new BorderLayout());
+                    barCard.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+                    JLabel lblBarTitle = new JLabel("5 Buku Paling Sering Dipinjam");
+                    lblBarTitle.setFont(DesignSystem.displayFont(15f, Font.BOLD));
+                    lblBarTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+                    barCard.add(lblBarTitle, BorderLayout.NORTH);
+                    barCard.add(barChartPanel, BorderLayout.CENTER);
+                    analyticsContentPanel.add(barCard);
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    analyticsContentPanel.add(new JLabel("Gagal memuat grafik.", SwingConstants.CENTER));
+                }
+                analyticsContentPanel.revalidate();
+                analyticsContentPanel.repaint();
+            }
+        };
+        worker.execute();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

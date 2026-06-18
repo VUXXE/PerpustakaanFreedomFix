@@ -15,6 +15,7 @@ public class Book {
     private int totalCopies;
     private int availableCopies;
     private String createdAt;
+    private int checkoutCount;
 
     public Book() {}
 
@@ -60,4 +61,7 @@ public class Book {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public int getCheckoutCount() { return checkoutCount; }
+    public void setCheckoutCount(int checkoutCount) { this.checkoutCount = checkoutCount; }
 }

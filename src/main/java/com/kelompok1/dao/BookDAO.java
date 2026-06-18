@@ -137,6 +137,12 @@ public class BookDAO {
         book.setTotalCopies(rs.getInt("total_copies"));
         book.setAvailableCopies(rs.getInt("available_copies"));
         book.setCreatedAt(rs.getString("created_at"));
+        try {
+            book.setCheckoutCount(rs.getInt("checkout_count"));
+        } catch (SQLException e) {
+            // Ignored if column doesn't exist in result set
+            book.setCheckoutCount(0);
+        }
         return book;
     }
 
