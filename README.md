@@ -40,20 +40,21 @@ java -cp "target/classes;target/dependency/*" com.kelompok1.util.DbSetup
 ```
 Tunggu hingga proses impor puluhan ribu baris data buku selesai.
 
-## 3. Menjalankan Aplikasi Utama
+## 3. Menjalankan Aplikasi di NetBeans (Paling Mudah)
 
-Setelah database berhasil disiapkan, Anda dapat langsung masuk ke aplikasi utama.
+Karena proyek ini menggunakan **Maven**, menjalankannya di NetBeans sangatlah mudah:
 
-**Cara Menjalankan:**
-Jalankan class utama `PerpustakaanFreedom.java` yang berada di package `com.kelompok1`.
-Melalui terminal:
-```bash
-# Linux / macOS
-java -cp "target/classes:target/dependency/*" com.kelompok1.PerpustakaanFreedom
+1. Buka **Apache NetBeans**.
+2. Klik menu **File** -> **Open Project**.
+3. Cari dan pilih folder `PerpustakaanFreedomFIx` (folder proyek ini), lalu klik **Open Project**.
+4. Di panel *Projects* (sebelah kiri), buka `Source Packages` -> `com.kelompok1.util`.
+5. Klik kanan pada file **`DbSetup.java`**, lalu pilih **Run File** (ini untuk menyiapkan database dan mengimpor buku. Tunggu sampai selesai).
+6. Setelah database siap, buka `Source Packages` -> `com.kelompok1`.
+7. Klik kanan pada file **`PerpustakaanFreedom.java`**, lalu pilih **Run File** untuk membuka aplikasinya.
 
-# Windows
-java -cp "target/classes;target/dependency/*" com.kelompok1.PerpustakaanFreedom
-```
+*(Catatan: Saat pertama kali dibuka, NetBeans mungkin membutuhkan waktu beberapa saat untuk mengunduh dependency secara otomatis di latar belakang).*
+
+---
 
 ### Kredensial Login Bawaan (Admin)
 Setelah aplikasi terbuka, Anda dapat login menggunakan kredensial admin bawaan berikut:
