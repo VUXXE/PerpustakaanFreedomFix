@@ -50,7 +50,7 @@ public class BookDAO {
     }
 
     public boolean addBook(Book book) {
-        String sql = "INSERT INTO books (series_title, title, author, call_number, publisher, \"collation\", language, isbn, classification, edition, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO books (series_title, title, author, call_number, publisher, `collation`, language, isbn, classification, edition, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, book.getSeriesTitle());
@@ -73,7 +73,7 @@ public class BookDAO {
     }
 
     public boolean updateBook(Book book) {
-        String sql = "UPDATE books SET series_title = ?, title = ?, author = ?, call_number = ?, publisher = ?, \"collation\" = ?, language = ?, isbn = ?, classification = ?, edition = ?, total_copies = ?, available_copies = ? WHERE book_id = ?";
+        String sql = "UPDATE books SET series_title = ?, title = ?, author = ?, call_number = ?, publisher = ?, `collation` = ?, language = ?, isbn = ?, classification = ?, edition = ?, total_copies = ?, available_copies = ? WHERE book_id = ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, book.getSeriesTitle());

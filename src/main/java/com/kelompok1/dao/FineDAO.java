@@ -71,7 +71,7 @@ public class FineDAO {
     public void assessFines() {
         // Logic to calculate overdue transactions and create fines using the dynamic fine rate setting
         String sql = "INSERT IGNORE INTO fines (transaction_id, amount) " +
-                     "SELECT transaction_id, DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE key = 'fine_rate'), 5000.0) " +
+                     "SELECT transaction_id, DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE `key` = 'fine_rate'), 5000.0) " +
                      "FROM transactions " +
                      "WHERE status = 'Issued' AND CURDATE() > CAST(due_date AS DATE)";
         try (Connection conn = DatabaseHelper.getConnection();
@@ -79,7 +79,7 @@ public class FineDAO {
             stmt.executeUpdate(sql);
             
             // Update existing unpaid fines
-            String updateSql = "UPDATE fines SET amount = (SELECT DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE key = 'fine_rate'), 5000.0) " +
+            String updateSql = "UPDATE fines SET amount = (SELECT DATEDIFF(CURDATE(), CAST(due_date AS DATE)) * COALESCE((SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE `key` = 'fine_rate'), 5000.0) " +
                                "FROM transactions WHERE transactions.transaction_id = fines.transaction_id) " +
                                "WHERE status = 'Unpaid'";
             stmt.executeUpdate(updateSql);

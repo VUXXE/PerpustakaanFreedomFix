@@ -63,8 +63,7 @@ public class DatabaseHelper {
                 // Ignore if column already exists
             }
             
-            // Auto-fill member_code for existing users
-            stmt.execute("UPDATE users SET member_code = CONCAT('MEM-', LPAD(CAST(user_id AS CHAR), 4, '0')) WHERE member_code IS NULL;");
+            // Early member_code update removed, now handled at the end of initialization
 
             // 2. BOOKS TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS books (" +
@@ -74,7 +73,7 @@ public class DatabaseHelper {
                     "author VARCHAR(500), " +
                     "call_number VARCHAR(100), " +
                     "publisher VARCHAR(100), " +
-                    "\"collation\" VARCHAR(255), " +
+                    "`collation` VARCHAR(255), " +
                     "language VARCHAR(50), " +
                     "isbn VARCHAR(100), " +
                     "classification VARCHAR(100), " +
@@ -109,19 +108,23 @@ public class DatabaseHelper {
 
             // 5. SETTINGS TABLE
             stmt.execute("CREATE TABLE IF NOT EXISTS settings (" +
-                    "key VARCHAR(255) PRIMARY KEY, " +
+                    "`key` VARCHAR(255) PRIMARY KEY, " +
                     "value VARCHAR(255) NOT NULL" +
                     ");");
 
             // Seed default settings if empty
-            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('fine_rate', '5000');");
-            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('borrow_duration', '7');");
-            stmt.execute("INSERT IGNORE INTO settings (key, value) VALUES ('max_borrow_limit', '3');");
+            stmt.execute("INSERT IGNORE INTO settings (`key`, value) VALUES ('fine_rate', '5000');");
+            stmt.execute("INSERT IGNORE INTO settings (`key`, value) VALUES ('borrow_duration', '7');");
+            stmt.execute("INSERT IGNORE INTO settings (`key`, value) VALUES ('max_borrow_limit', '3');");
 
-            // Insert default admin if not exists
+            // Insert default admin if not exists, or update it to ensure the password is correct
             String adminHash = com.kelompok1.util.PasswordUtil.hashPassword("admin123");
-            stmt.execute("INSERT IGNORE INTO users (username, password_hash, full_name, email, phone, role) " +
-                    "VALUES ('admin', '" + adminHash + "', 'System Administrator', 'admin@library.com', '000000', 'Admin');");
+            stmt.execute("INSERT INTO users (username, password_hash, full_name, email, phone, role, status) " +
+                    "VALUES ('admin', '" + adminHash + "', 'System Administrator', 'admin@library.com', '000000', 'Admin', 'Active') " +
+                    "ON DUPLICATE KEY UPDATE password_hash = '" + adminHash + "', status = 'Active';");
+
+            // Auto-fill member_code for existing users (including the newly inserted admin)
+            stmt.execute("UPDATE users SET member_code = CONCAT('MEM-', LPAD(CAST(user_id AS CHAR), 4, '0')) WHERE member_code IS NULL;");
 
             System.out.println("Database initialized successfully.");
 

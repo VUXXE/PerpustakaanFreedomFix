@@ -6,7 +6,7 @@ import java.sql.*;
 public class SettingsDAO {
 
     public String getSetting(String key, String defaultValue) {
-        String sql = "SELECT value FROM settings WHERE key = ?";
+        String sql = "SELECT value FROM settings WHERE `key` = ?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, key);
@@ -22,7 +22,7 @@ public class SettingsDAO {
     }
 
     public boolean setSetting(String key, String value) {
-        String sql = "INSERT INTO settings (key, value) VALUES (?, ?) " +
+        String sql = "INSERT INTO settings (`key`, value) VALUES (?, ?) " +
                      "ON DUPLICATE KEY UPDATE value = VALUES(value)";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
