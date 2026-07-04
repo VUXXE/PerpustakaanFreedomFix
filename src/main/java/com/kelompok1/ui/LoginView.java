@@ -1,8 +1,8 @@
 package com.kelompok1.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.service.UserService;
-import com.kelompok1.model.User;
+import com.kelompok1.service.Services.UserService;
+import com.kelompok1.model.Models.User;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -160,7 +160,6 @@ public class LoginView extends JFrame {
                     else         { h = getHeight(); w = (int)(getHeight() * ia); y = 0; x = (getWidth() - w) / 2; }
                     g2.drawImage(bgImage, x, y, w, h, this);
                     // Dark overlay for text readability
-                    g2.setColor(new Color(0x86000d, false) {{ }});
                     g2.setColor(new Color(20, 10, 10, 140));
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 } else {
@@ -206,35 +205,26 @@ public class LoginView extends JFrame {
             return;
         }
 
-        btnLogin.setEnabled(false);
-        btnLogin.setText("Memverifikasi…");
         lblError.setText(" ");
 
-        SwingWorker<User, Void> worker = new SwingWorker<>() {
-            @Override protected User doInBackground() { return userService.authenticate(username, password); }
-            @Override protected void done() {
-                try {
-                    User user = get();
-                    if (user != null) {
-                        txtUsername.putClientProperty(FlatClientProperties.OUTLINE, null);
-                        txtPassword.putClientProperty(FlatClientProperties.OUTLINE, null);
-                        if ("Admin".equalsIgnoreCase(user.getRole())) new AdminDashboard(user).setVisible(true);
-                        else new MemberDashboard(user).setVisible(true);
-                        LoginView.this.dispose();
-                    } else {
-                        showError("Nama pengguna atau kata sandi salah.");
-                        btnLogin.setEnabled(true);
-                        btnLogin.setText("Masuk");
-                    }
-                } catch (Exception ex) {
-                    showError("Kesalahan saat menghubungkan ke database.");
-                    ex.printStackTrace();
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("Masuk");
+        try {
+            User user = userService.authenticate(username, password);
+            if (user != null) {
+                txtUsername.putClientProperty(FlatClientProperties.OUTLINE, null);
+                txtPassword.putClientProperty(FlatClientProperties.OUTLINE, null);
+                if ("Admin".equalsIgnoreCase(user.getRole())) {
+                    new AdminDashboard(user).setVisible(true);
+                } else {
+                    new MemberDashboard(user).setVisible(true);
                 }
+                LoginView.this.dispose();
+            } else {
+                showError("Nama pengguna atau kata sandi salah.");
             }
-        };
-        worker.execute();
+        } catch (Exception ex) {
+            showError("Kesalahan saat menghubungkan ke database.");
+            ex.printStackTrace();
+        }
     }
 
     private void showError(String message) {

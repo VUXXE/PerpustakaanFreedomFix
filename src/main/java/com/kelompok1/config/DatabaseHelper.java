@@ -118,7 +118,7 @@ public class DatabaseHelper {
             stmt.execute("INSERT IGNORE INTO settings (`key`, value) VALUES ('max_borrow_limit', '3');");
 
             // Insert default admin if not exists, or update it to ensure the password is correct
-            String adminHash = com.kelompok1.util.PasswordUtil.hashPassword("admin123");
+            String adminHash = com.kelompok1.service.Services.UserService.hashPassword("admin123");
             stmt.execute("INSERT INTO users (username, password_hash, full_name, email, phone, role, status) " +
                     "VALUES ('admin', '" + adminHash + "', 'System Administrator', 'admin@library.com', '000000', 'Admin', 'Active') " +
                     "ON DUPLICATE KEY UPDATE password_hash = '" + adminHash + "', status = 'Active';");

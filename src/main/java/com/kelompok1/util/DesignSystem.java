@@ -1,5 +1,8 @@
 package com.kelompok1.util;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -55,9 +58,7 @@ public class DesignSystem {
     // ─────────────────────────────────────────────
     // TYPOGRAPHY  (system font fallbacks)
     // ─────────────────────────────────────────────
-    // Tries Plus Jakarta Sans → Calibri → Dialog (always present)
     private static final String DISPLAY_FAMILY = pickFont("Plus Jakarta Sans", "Calibri", "Verdana", "Dialog");
-    // Tries Inter → Segoe UI → SansSerif
     private static final String BODY_FAMILY    = pickFont("Inter", "Segoe UI", "Helvetica Neue", "SansSerif");
 
     private static String pickFont(String... candidates) {
@@ -71,12 +72,10 @@ public class DesignSystem {
         return "Dialog";
     }
 
-    /** Display / heading font — Plus Jakarta Sans Bold (or best available). */
     public static Font displayFont(float sizePt, int style) {
         return new Font(DISPLAY_FAMILY, style, (int) sizePt);
     }
 
-    /** Body / data font — Inter (or best available). */
     public static Font bodyFont(float sizePt, int style) {
         return new Font(BODY_FAMILY, style, (int) sizePt);
     }
@@ -85,14 +84,12 @@ public class DesignSystem {
     // THEME APPLICATION  (call once from main)
     // ─────────────────────────────────────────────
     public static void applyTheme() {
-        // Arc / rounding
         UIManager.put("Component.arc",         RADIUS_DEFAULT);
         UIManager.put("Button.arc",            RADIUS_DEFAULT);
         UIManager.put("TextComponent.arc",     RADIUS_DEFAULT);
         UIManager.put("ProgressBar.arc",       RADIUS_DEFAULT);
         UIManager.put("CheckBox.arc",          RADIUS_SM);
 
-        // Component behavior
         UIManager.put("Component.arrowType",           "chevron");
         UIManager.put("TabbedPane.showTabSeparators",  true);
         UIManager.put("ScrollBar.showButtons",         false);
@@ -100,41 +97,67 @@ public class DesignSystem {
         UIManager.put("Button.innerFocusWidth",        0);
         UIManager.put("Component.focusWidth",          2);
 
-        // Accent / brand color  →  FlatLaf uses this for selection, highlights, etc.
         UIManager.put("Component.accentColor",          PRIMARY);
 
-        // Surface colors
         UIManager.put("Panel.background",               SURFACE);
         UIManager.put("RootPane.background",            SURFACE);
         UIManager.put("OptionPane.background",          SURFACE_CONTAINER_LOWEST);
         UIManager.put("Dialog.background",              SURFACE_CONTAINER_LOWEST);
 
-        // List / Table colors
         UIManager.put("List.background",                SURFACE_CONTAINER_LOWEST);
         UIManager.put("Table.background",               SURFACE_CONTAINER_LOWEST);
         UIManager.put("Table.alternateRowColor",        SURFACE_CONTAINER_LOW);
         UIManager.put("TableHeader.background",         SURFACE_CONTAINER_LOW);
         UIManager.put("TableHeader.separatorColor",     OUTLINE_VARIANT);
 
-        // Text colors
         UIManager.put("Label.foreground",               ON_SURFACE);
         UIManager.put("Label.disabledForeground",       ON_SURFACE_VARIANT);
         UIManager.put("TextField.foreground",           ON_SURFACE);
         UIManager.put("TextArea.foreground",            ON_SURFACE);
 
-        // Border/outline
         UIManager.put("Component.borderColor",          OUTLINE_VARIANT);
         UIManager.put("Component.disabledBorderColor",  SURFACE_CONTAINER_HIGH);
 
-        // Global default font → Inter body-md (14px)
         UIManager.put("defaultFont", bodyFont(13f, Font.PLAIN));
+    }
+
+    // ─────────────────────────────────────────────
+    // THEME MANAGER FUNCTIONALITY
+    // ─────────────────────────────────────────────
+    private static boolean isDarkMode = false;
+
+    public static boolean isDarkMode() {
+        return isDarkMode;
+    }
+
+    public static void toggleTheme(Window rootWindow) {
+        isDarkMode = !isDarkMode;
+        applyTheme(rootWindow);
+    }
+
+    public static void applyTheme(Window rootWindow) {
+        EventQueue.invokeLater(() -> {
+            try {
+                if (isDarkMode) {
+                    UIManager.setLookAndFeel(new FlatDarkLaf());
+                } else {
+                    UIManager.setLookAndFeel(new FlatLightLaf());
+                }
+                SwingUtilities.updateComponentTreeUI(rootWindow);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+    }
+
+    public static String getToggleLabel() {
+        return isDarkMode ? "Mode Terang" : "Mode Gelap";
     }
 
     // ─────────────────────────────────────────────
     // COMPONENT STYLING HELPERS
     // ─────────────────────────────────────────────
 
-    /** Solid red primary action button. */
     public static void applyPrimaryButton(JButton btn) {
         btn.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
             "background: #86000d; " +
@@ -145,7 +168,6 @@ public class DesignSystem {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    /** White background with outline border — secondary action. */
     public static void applySecondaryButton(JButton btn) {
         btn.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
             "background: #ffffff; " +
@@ -157,7 +179,6 @@ public class DesignSystem {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    /** Danger/delete — error red. */
     public static void applyDangerButton(JButton btn) {
         btn.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
             "background: #ba1a1a; " +
@@ -168,7 +189,6 @@ public class DesignSystem {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    /** White card with 16px arc and subtle outline shadow. */
     public static void applyCard(JPanel panel) {
         panel.setBackground(SURFACE_CONTAINER_LOWEST);
         panel.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
@@ -176,7 +196,6 @@ public class DesignSystem {
         );
     }
 
-    /** Standard input field — 8px arc, standard border. */
     public static void applyInputField(JTextField tf) {
         tf.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE,
             "margin: 6, 10, 6, 10; arc: 8"

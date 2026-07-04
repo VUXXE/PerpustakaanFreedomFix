@@ -1,8 +1,8 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Fine;
-import com.kelompok1.service.FineService;
+import com.kelompok1.model.Models.Fine;
+import com.kelompok1.service.Services.FineService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;

@@ -1,8 +1,8 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Book;
-import com.kelompok1.service.BookService;
+import com.kelompok1.model.Models.Book;
+import com.kelompok1.service.Services.BookService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -26,15 +26,9 @@ public class BooksPanel extends JPanel {
     private JLabel lblFormTitle;
     private JLabel lblFormSubtitle;
     private JTextField txtTitle;
-    private JTextField txtSeries;
     private JTextField txtAuthor;
     private JTextField txtPublisher;
-    private JTextField txtCallNum;
-    private JTextField txtCollation;
-    private JTextField txtLanguage;
     private JTextField txtIsbn;
-    private JTextField txtClass;
-    private JTextField txtEdition;
     private JSpinner spinTotal;
     private JSpinner spinAvail;
     private JButton btnDeleteBook;
@@ -59,17 +53,11 @@ public class BooksPanel extends JPanel {
         northWrapper.setLayout(new BoxLayout(northWrapper, BoxLayout.Y_AXIS));
         northWrapper.setOpaque(false);
 
-        // Instantiate all form fields
+        // Instantiate form fields
         txtTitle = UIUtils.createFormTextField("misal: Clean Code");
-        txtSeries = UIUtils.createFormTextField("misal: Pearson Tech");
         txtAuthor = UIUtils.createFormTextField("misal: Robert C. Martin");
         txtPublisher = UIUtils.createFormTextField("misal: Prentice Hall");
-        txtCallNum = UIUtils.createFormTextField("misal: QA76.76.C65 M37");
-        txtCollation = UIUtils.createFormTextField("misal: 431 p. : ill. ; 23 cm.");
-        txtLanguage = UIUtils.createFormTextField("misal: English");
         txtIsbn = UIUtils.createFormTextField("misal: 9780132350884");
-        txtClass = UIUtils.createFormTextField("misal: 005.1");
-        txtEdition = UIUtils.createFormTextField("misal: Edisi ke-1");
 
         spinTotal = new JSpinner(new SpinnerNumberModel(1, 0, 10000, 1));
         spinAvail = new JSpinner(new SpinnerNumberModel(1, 0, 10000, 1));
@@ -93,14 +81,14 @@ public class BooksPanel extends JPanel {
         GridBagConstraints fGbc = new GridBagConstraints();
         fGbc.fill = GridBagConstraints.HORIZONTAL;
         fGbc.insets = new Insets(4, 6, 4, 6);
-        fGbc.weightx = 0.25;
+        fGbc.weightx = 0.33;
 
         int r = 0;
 
         // Row 0: Form Header Title & Status Subtitle
         fGbc.gridy = r;
         fGbc.gridx = 0;
-        fGbc.gridwidth = 4;
+        fGbc.gridwidth = 3;
         fGbc.weightx = 1.0;
         fGbc.insets = new Insets(4, 0, 4, 0); // No left inset to align with table title
 
@@ -120,11 +108,11 @@ public class BooksPanel extends JPanel {
         titlePanel.add(lblFormSubtitle);
         formPanel.add(titlePanel, fGbc);
 
-        // Row 1: Labels for inputs 1-4
+        // Row 1: Labels for inputs 1-3
         r++;
         fGbc.gridy = r;
         fGbc.gridwidth = 1;
-        fGbc.weightx = 0.25;
+        fGbc.weightx = 0.33;
         fGbc.insets = new Insets(10, 6, 0, 6); // gap above input labels
 
         fGbc.gridx = 0;
@@ -134,116 +122,63 @@ public class BooksPanel extends JPanel {
         formPanel.add(lblName, fGbc);
 
         fGbc.gridx = 1;
-        JLabel lblSer = new JLabel("Judul Seri");
-        lblSer.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblSer.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblSer, fGbc);
-
-        fGbc.gridx = 2;
         JLabel lblAuth = new JLabel("Penulis");
         lblAuth.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblAuth.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblAuth, fGbc);
 
-        fGbc.gridx = 3;
+        fGbc.gridx = 2;
         JLabel lblPub = new JLabel("Penerbit");
         lblPub.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblPub.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblPub, fGbc);
 
-        // Row 2: Fields 1-4
+        // Row 2: Fields 1-3
         r++;
         fGbc.gridy = r;
         fGbc.insets = new Insets(2, 6, 6, 6);
 
         fGbc.gridx = 0; formPanel.add(txtTitle, fGbc);
-        fGbc.gridx = 1; formPanel.add(txtSeries, fGbc);
-        fGbc.gridx = 2; formPanel.add(txtAuthor, fGbc);
-        fGbc.gridx = 3; formPanel.add(txtPublisher, fGbc);
+        fGbc.gridx = 1; formPanel.add(txtAuthor, fGbc);
+        fGbc.gridx = 2; formPanel.add(txtPublisher, fGbc);
 
-        // Row 3: Labels for inputs 5-8
+        // Row 3: Labels for inputs 4-6
         r++;
         fGbc.gridy = r;
         fGbc.insets = new Insets(6, 6, 0, 6);
 
         fGbc.gridx = 0;
-        JLabel lblCall = new JLabel("Nomor Panggil");
-        lblCall.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblCall.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblCall, fGbc);
-
-        fGbc.gridx = 1;
-        JLabel lblColl = new JLabel("Kolasi");
-        lblColl.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblColl.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblColl, fGbc);
-
-        fGbc.gridx = 2;
-        JLabel lblLang = new JLabel("Bahasa");
-        lblLang.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblLang.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblLang, fGbc);
-
-        fGbc.gridx = 3;
         JLabel lblIsbnField = new JLabel("ISBN");
         lblIsbnField.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblIsbnField.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblIsbnField, fGbc);
 
-        // Row 4: Fields 5-8
-        r++;
-        fGbc.gridy = r;
-        fGbc.insets = new Insets(2, 6, 6, 6);
-
-        fGbc.gridx = 0; formPanel.add(txtCallNum, fGbc);
-        fGbc.gridx = 1; formPanel.add(txtCollation, fGbc);
-        fGbc.gridx = 2; formPanel.add(txtLanguage, fGbc);
-        fGbc.gridx = 3; formPanel.add(txtIsbn, fGbc);
-
-        // Row 5: Labels for inputs 9-12
-        r++;
-        fGbc.gridy = r;
-        fGbc.insets = new Insets(6, 6, 0, 6);
-
-        fGbc.gridx = 0;
-        JLabel lblCls = new JLabel("Klasifikasi");
-        lblCls.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblCls.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblCls, fGbc);
-
         fGbc.gridx = 1;
-        JLabel lblEd = new JLabel("Edisi");
-        lblEd.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
-        lblEd.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblEd, fGbc);
-
-        fGbc.gridx = 2;
         JLabel lblTot = new JLabel("Jumlah Salinan");
         lblTot.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblTot.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblTot, fGbc);
 
-        fGbc.gridx = 3;
+        fGbc.gridx = 2;
         JLabel lblAv = new JLabel("Salinan Tersedia");
         lblAv.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblAv.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblAv, fGbc);
 
-        // Row 6: Fields 9-12
+        // Row 4: Fields 4-6
         r++;
         fGbc.gridy = r;
         fGbc.insets = new Insets(2, 6, 6, 6);
 
-        fGbc.gridx = 0; formPanel.add(txtClass, fGbc);
-        fGbc.gridx = 1; formPanel.add(txtEdition, fGbc);
-        fGbc.gridx = 2; formPanel.add(spinTotal, fGbc);
-        fGbc.gridx = 3; formPanel.add(spinAvail, fGbc);
+        fGbc.gridx = 0; formPanel.add(txtIsbn, fGbc);
+        fGbc.gridx = 1; formPanel.add(spinTotal, fGbc);
+        fGbc.gridx = 2; formPanel.add(spinAvail, fGbc);
 
-        // Row 7: Action Buttons Panel (Hapus, Edit, Simpan, Batal)
+        // Row 5: Action Buttons Panel (Hapus, Edit, Simpan, Batal)
         r++;
         fGbc.gridy = r;
         fGbc.gridx = 0;
-        fGbc.gridwidth = 4;
+        fGbc.gridwidth = 3;
         fGbc.weightx = 1.0;
         fGbc.insets = new Insets(12, 6, 6, 6);
 
@@ -272,11 +207,11 @@ public class BooksPanel extends JPanel {
 
         formPanel.add(buttonPanel, fGbc);
 
-        // Row 8: Error Label
+        // Row 6: Error Label
         r++;
         fGbc.gridy = r;
         fGbc.gridx = 0;
-        fGbc.gridwidth = 4;
+        fGbc.gridwidth = 3;
         fGbc.weightx = 1.0;
         fGbc.insets = new Insets(4, 6, 0, 6);
 
@@ -298,7 +233,7 @@ public class BooksPanel extends JPanel {
         booksTitleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         centerWrapper.add(booksTitleLabel, BorderLayout.NORTH);
 
-        String[] cols = {"ID", "ISBN/ISSN", "Judul", "Nomor Panggil", "Kolasi", "Total", "Tersedia"};
+        String[] cols = {"ID", "ISBN", "Judul", "Penulis", "Penerbit", "Total", "Tersedia"};
         booksTableModel = new DefaultTableModel(new Object[][]{}, cols) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
@@ -311,10 +246,10 @@ public class BooksPanel extends JPanel {
         // Resize ISBN column
         booksTable.getColumnModel().getColumn(1).setMinWidth(120);
         booksTable.getColumnModel().getColumn(1).setMaxWidth(150);
-        // Resize Call Number column
+        // Resize Penulis column
         booksTable.getColumnModel().getColumn(3).setMinWidth(120);
         booksTable.getColumnModel().getColumn(3).setMaxWidth(150);
-        // Resize Collation column
+        // Resize Penerbit column
         booksTable.getColumnModel().getColumn(4).setMinWidth(120);
         booksTable.getColumnModel().getColumn(4).setMaxWidth(150);
         // Resize Total column
@@ -397,39 +332,26 @@ public class BooksPanel extends JPanel {
             );
 
             if (confirm == JOptionPane.YES_OPTION) {
-                SwingWorker<Boolean, Void> deleteWorker = new SwingWorker<>() {
-                    private String errorMessage = null;
-                    @Override
-                    protected Boolean doInBackground() throws Exception {
-                        try {
-                            return bookService.deleteBook(bookId);
-                        } catch (java.sql.SQLException ex) {
-                            if (ex.getSQLState() != null && ex.getSQLState().startsWith("23")) {
-                                errorMessage = "Tidak dapat menghapus buku ini karena dirujuk dalam transaksi peminjaman.";
-                            } else {
-                                errorMessage = ex.getMessage();
-                            }
-                            throw ex;
-                        }
+                try {
+                    boolean success = bookService.deleteBook(bookId);
+                    if (success) {
+                        JOptionPane.showMessageDialog(BooksPanel.this, "Buku berhasil dihapus.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        loadBooksData(currentSearchQuery);
+                        clearForm();
+                    } else {
+                        JOptionPane.showMessageDialog(BooksPanel.this, "Gagal menghapus buku.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
                     }
-                    @Override
-                    protected void done() {
-                        try {
-                            boolean success = get();
-                            if (success) {
-                                JOptionPane.showMessageDialog(BooksPanel.this, "Buku berhasil dihapus.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                                loadBooksData(currentSearchQuery);
-                                clearForm();
-                            } else {
-                                JOptionPane.showMessageDialog(BooksPanel.this, "Gagal menghapus buku.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
-                            }
-                        } catch (Exception ex) {
-                            String msg = errorMessage != null ? errorMessage : "Terjadi kesalahan: " + ex.getMessage();
-                            JOptionPane.showMessageDialog(BooksPanel.this, msg, "Kesalahan Database", JOptionPane.ERROR_MESSAGE);
-                        }
+                } catch (java.sql.SQLException ex) {
+                    String msg;
+                    if (ex.getSQLState() != null && ex.getSQLState().startsWith("23")) {
+                        msg = "Tidak dapat menghapus buku ini karena dirujuk dalam transaksi peminjaman.";
+                    } else {
+                        msg = ex.getMessage();
                     }
-                };
-                deleteWorker.execute();
+                    JOptionPane.showMessageDialog(BooksPanel.this, msg, "Kesalahan Database", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(BooksPanel.this, "Terjadi kesalahan: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -473,79 +395,55 @@ public class BooksPanel extends JPanel {
         if (btnPrevPage != null) btnPrevPage.setEnabled(false);
         if (btnNextPage != null) btnNextPage.setEnabled(false);
 
-        SwingWorker<List<Book>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<Book> doInBackground() {
-                if (searchQuery == null || searchQuery.trim().isEmpty()) {
-                    return bookService.getAllBooks(currentPage, pageSize);
-                } else {
-                    return bookService.searchBooks(searchQuery.trim(), currentPage, pageSize);
-                }
+        try {
+            List<Book> books;
+            if (searchQuery == null || searchQuery.trim().isEmpty()) {
+                books = bookService.getAllBooks(currentPage, pageSize);
+            } else {
+                books = bookService.searchBooks(searchQuery.trim(), currentPage, pageSize);
             }
-            @Override
-            protected void done() {
-                try {
-                    List<Book> books = get();
-                    for (Book b : books) {
-                        booksTableModel.addRow(new Object[]{
-                            b.getBookId(), b.getIsbn() != null ? b.getIsbn() : "", b.getTitle(),
-                            b.getCallNumber() != null ? b.getCallNumber() : "", b.getCollation() != null ? b.getCollation() : "",
-                            b.getTotalCopies(), b.getAvailableCopies()
-                        });
-                    }
-                    if (lblPage != null) {
-                        lblPage.setText("Halaman " + currentPage);
-                        btnPrevPage.setEnabled(currentPage > 1);
-                        btnNextPage.setEnabled(books.size() == pageSize);
-                    }
-                    booksTitleLabel.setText("Manajemen Buku (" + booksTableModel.getRowCount() + " data ditampilkan)");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    booksTitleLabel.setText("Manajemen Buku (Gagal memuat data)");
-                }
+            
+            for (Book b : books) {
+                booksTableModel.addRow(new Object[]{
+                    b.getBookId(), b.getIsbn() != null ? b.getIsbn() : "", b.getTitle(),
+                    b.getAuthor() != null ? b.getAuthor() : "", b.getPublisher() != null ? b.getPublisher() : "",
+                    b.getTotalCopies(), b.getAvailableCopies()
+                });
             }
-        };
-        worker.execute();
+            if (lblPage != null) {
+                lblPage.setText("Halaman " + currentPage);
+                btnPrevPage.setEnabled(currentPage > 1);
+                btnNextPage.setEnabled(books.size() == pageSize);
+            }
+            booksTitleLabel.setText("Manajemen Buku (" + booksTableModel.getRowCount() + " data ditampilkan)");
+        } catch (Exception e) {
+            e.printStackTrace();
+            booksTitleLabel.setText("Manajemen Buku (Gagal memuat data)");
+        }
     }
 
     private void loadBookIntoForm(int bookId) {
-        SwingWorker<Book, Void> fetchWorker = new SwingWorker<>() {
-            @Override
-            protected Book doInBackground() {
-                return bookService.getBookById(bookId);
-            }
-            @Override
-            protected void done() {
-                try {
-                    Book b = get();
-                    if (b != null) {
-                        editingBook = b;
-                        lblFormTitle.setText("Ubah Detail Buku");
-                        lblFormSubtitle.setText("(ID Buku: " + b.getBookId() + ")");
-                        lblFormSubtitle.setForeground(DesignSystem.PRIMARY);
+        try {
+            Book b = bookService.getBookById(bookId);
+            if (b != null) {
+                editingBook = b;
+                lblFormTitle.setText("Ubah Detail Buku");
+                lblFormSubtitle.setText("(ID Buku: " + b.getBookId() + ")");
+                lblFormSubtitle.setForeground(DesignSystem.PRIMARY);
 
-                        txtTitle.setText(b.getTitle());
-                        txtSeries.setText(b.getSeriesTitle() != null ? b.getSeriesTitle() : "");
-                        txtAuthor.setText(b.getAuthor() != null ? b.getAuthor() : "");
-                        txtPublisher.setText(b.getPublisher() != null ? b.getPublisher() : "");
-                        txtCallNum.setText(b.getCallNumber() != null ? b.getCallNumber() : "");
-                        txtCollation.setText(b.getCollation() != null ? b.getCollation() : "");
-                        txtLanguage.setText(b.getLanguage() != null ? b.getLanguage() : "");
-                        txtIsbn.setText(b.getIsbn() != null ? b.getIsbn() : "");
-                        txtClass.setText(b.getClassification() != null ? b.getClassification() : "");
-                        txtEdition.setText(b.getEdition() != null ? b.getEdition() : "");
-                        spinTotal.setValue(b.getTotalCopies());
-                        spinAvail.setValue(b.getAvailableCopies());
+                txtTitle.setText(b.getTitle());
+                txtAuthor.setText(b.getAuthor() != null ? b.getAuthor() : "");
+                txtPublisher.setText(b.getPublisher() != null ? b.getPublisher() : "");
+                txtIsbn.setText(b.getIsbn() != null ? b.getIsbn() : "");
+                spinTotal.setValue(b.getTotalCopies());
+                spinAvail.setValue(b.getAvailableCopies());
 
-                        btnDeleteBook.setEnabled(true);
-                        btnSaveBook.setText("Simpan Perubahan");
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                btnDeleteBook.setEnabled(true);
+                btnSaveBook.setText("Simpan Perubahan");
             }
-        };
-        fetchWorker.execute();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void clearForm() {
@@ -556,15 +454,9 @@ public class BooksPanel extends JPanel {
 
         txtTitle.setText("");
         txtTitle.putClientProperty(FlatClientProperties.OUTLINE, null);
-        txtSeries.setText("");
         txtAuthor.setText("");
         txtPublisher.setText("");
-        txtCallNum.setText("");
-        txtCollation.setText("");
-        txtLanguage.setText("");
         txtIsbn.setText("");
-        txtClass.setText("");
-        txtEdition.setText("");
         spinTotal.setValue(1);
         spinAvail.setValue(1);
 
@@ -599,46 +491,32 @@ public class BooksPanel extends JPanel {
 
         Book book = editingBook == null ? new Book() : editingBook;
         book.setTitle(titleStr);
-        book.setSeriesTitle(txtSeries.getText().trim());
         book.setAuthor(txtAuthor.getText().trim());
         book.setPublisher(txtPublisher.getText().trim());
-        book.setCallNumber(txtCallNum.getText().trim());
-        book.setCollation(txtCollation.getText().trim());
-        book.setLanguage(txtLanguage.getText().trim());
         book.setIsbn(txtIsbn.getText().trim());
-        book.setClassification(txtClass.getText().trim());
-        book.setEdition(txtEdition.getText().trim());
         book.setTotalCopies(totalVal);
         book.setAvailableCopies(availVal);
 
-        SwingWorker<Boolean, Void> saveWorker = new SwingWorker<>() {
-            @Override
-            protected Boolean doInBackground() {
-                if (editingBook == null) {
-                    return bookService.addBook(book);
-                } else {
-                    return bookService.updateBook(book);
-                }
+        try {
+            boolean success;
+            if (editingBook == null) {
+                success = bookService.addBook(book);
+            } else {
+                success = bookService.updateBook(book);
             }
 
-            @Override
-            protected void done() {
-                btnSaveBook.setEnabled(true);
-                try {
-                    boolean success = get();
-                    if (success) {
-                        JOptionPane.showMessageDialog(BooksPanel.this, "Buku berhasil disimpan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                        loadBooksData(currentSearchQuery);
-                        clearForm();
-                    } else {
-                        lblError.setText("Gagal menyimpan buku ke database.");
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    lblError.setText("Kesalahan: " + ex.getMessage());
-                }
+            if (success) {
+                JOptionPane.showMessageDialog(BooksPanel.this, "Buku berhasil disimpan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                loadBooksData(currentSearchQuery);
+                clearForm();
+            } else {
+                lblError.setText("Gagal menyimpan buku ke database.");
             }
-        };
-        saveWorker.execute();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            lblError.setText("Kesalahan: " + ex.getMessage());
+        } finally {
+            btnSaveBook.setEnabled(true);
+        }
     }
 }

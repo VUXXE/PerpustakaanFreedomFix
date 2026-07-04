@@ -1,15 +1,15 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Book;
-import com.kelompok1.model.Transaction;
-import com.kelompok1.model.User;
+import com.kelompok1.model.Models.Book;
+import com.kelompok1.model.Models.Transaction;
+import com.kelompok1.model.Models.User;
 import com.kelompok1.report.ReportGenerator;
-import com.kelompok1.service.BookService;
-import com.kelompok1.service.FineService;
-import com.kelompok1.service.SettingsService;
-import com.kelompok1.service.TransactionService;
-import com.kelompok1.service.UserService;
+import com.kelompok1.service.Services.BookService;
+import com.kelompok1.service.Services.FineService;
+import com.kelompok1.service.Services.SettingsService;
+import com.kelompok1.service.Services.TransactionService;
+import com.kelompok1.service.Services.UserService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -71,7 +71,7 @@ public class TransactionsPanel extends JPanel {
         northWrapper.setOpaque(false);
 
         // Instantiate form components
-        txtMemberCode = UIUtils.createFormTextField("Masukkan Kode Anggota (misal: MEM-0001)");
+        txtMemberCode = UIUtils.createFormTextField("Masukkan Kode/Nama Anggota...");
         txtBookId = UIUtils.createFormTextField("Masukkan ID Buku (angka)");
 
         lblMemberName = new JLabel(" ");
@@ -88,26 +88,58 @@ public class TransactionsPanel extends JPanel {
         spinDuration.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
         spinDuration.setPreferredSize(new Dimension(tfWidth, tfHeight));
 
-        // Background SwingWorker to load default borrow duration setting
-        SwingWorker<Integer, Void> durationLoader = new SwingWorker<>() {
+        // Load default borrow duration setting directly
+        try {
+            spinDuration.setValue(Integer.parseInt(settingsService.getSetting("borrow_duration", "7")));
+        } catch (Exception e) {
+            spinDuration.setValue(7);
+        }
+
+        // Suggestions Popup for Member Name Search
+        JPopupMenu memberSuggestPopup = new JPopupMenu();
+        txtMemberCode.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
-            protected Integer doInBackground() {
-                try {
-                    return Integer.parseInt(settingsService.getSetting("borrow_duration", "7"));
-                } catch (Exception e) {
-                    return 7;
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                if (keyCode == java.awt.event.KeyEvent.VK_ESCAPE || keyCode == java.awt.event.KeyEvent.VK_ENTER ||
+                    keyCode == java.awt.event.KeyEvent.VK_UP || keyCode == java.awt.event.KeyEvent.VK_DOWN) {
+                    return;
+                }
+
+                String text = txtMemberCode.getText().trim();
+                if (text.length() >= 2) {
+                    try {
+                        List<User> matches = userService.searchUsers(text, 1, 8);
+                        memberSuggestPopup.removeAll();
+
+                        // Hide suggestion if fully matched
+                        if (matches.size() == 1 && matches.get(0).getMemberCode().equalsIgnoreCase(text)) {
+                            memberSuggestPopup.setVisible(false);
+                            return;
+                        }
+
+                        if (!matches.isEmpty()) {
+                            for (User u : matches) {
+                                JMenuItem item = new JMenuItem(u.getFullName() + " (" + u.getMemberCode() + ")");
+                                item.addActionListener(ae -> {
+                                    txtMemberCode.setText(u.getMemberCode());
+                                    memberSuggestPopup.setVisible(false);
+                                });
+                                memberSuggestPopup.add(item);
+                            }
+                            memberSuggestPopup.show(txtMemberCode, 0, txtMemberCode.getHeight());
+                            txtMemberCode.requestFocus();
+                        } else {
+                            memberSuggestPopup.setVisible(false);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
+                    memberSuggestPopup.setVisible(false);
                 }
             }
-            @Override
-            protected void done() {
-                try {
-                    spinDuration.setValue(get());
-                } catch (Exception e) {
-                    // Ignore, fallback to default model
-                }
-            }
-        };
-        durationLoader.execute();
+        });
 
         // Listeners for verification as typing
         txtMemberCode.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
@@ -147,7 +179,7 @@ public class TransactionsPanel extends JPanel {
         fGbc.gridx = 0;
         fGbc.gridwidth = 3;
         fGbc.weightx = 1.0;
-        fGbc.insets = new Insets(4, 0, 4, 0); // No left inset to align with table title
+        fGbc.insets = new Insets(4, 0, 4, 0);
 
         lblFormTitle = new JLabel("Form Transaksi Peminjaman");
         lblFormTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +4");
@@ -173,7 +205,7 @@ public class TransactionsPanel extends JPanel {
         fGbc.insets = new Insets(10, 6, 0, 6);
 
         fGbc.gridx = 0;
-        JLabel lblMem = new JLabel("Kode Anggota*");
+        JLabel lblMem = new JLabel("Kode/Nama Anggota*");
         lblMem.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblMem.setForeground(DesignSystem.ON_SURFACE_VARIANT);
         formPanel.add(lblMem, fGbc);
@@ -326,7 +358,6 @@ public class TransactionsPanel extends JPanel {
             if (selectedRow == -1) return;
 
             int txId = (Integer) transactionsTableModel.getValueAt(selectedRow, 0);
-            int userId = (Integer) transactionsTableModel.getValueAt(selectedRow, 1);
             int bookId = (Integer) transactionsTableModel.getValueAt(selectedRow, 2);
             String dueDateStr = (String) transactionsTableModel.getValueAt(selectedRow, 6);
 
@@ -340,60 +371,45 @@ public class TransactionsPanel extends JPanel {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 btnReturnBook.setEnabled(false);
-                SwingWorker<Boolean, Void> returnWorker = new SwingWorker<>() {
-                    private double fineAmount = 0.0;
-                    private boolean isOverdue = false;
-
-                    @Override
-                    protected Boolean doInBackground() {
+                try {
+                    double fineAmount = 0.0;
+                    boolean isOverdue = false;
+                    java.time.LocalDate today = java.time.LocalDate.now();
+                    java.time.LocalDate dueDate = java.time.LocalDate.parse(dueDateStr);
+                    if (today.isAfter(dueDate)) {
+                        long days = java.time.temporal.ChronoUnit.DAYS.between(dueDate, today);
+                        double fineRate = 5000.0;
                         try {
-                            java.time.LocalDate today = java.time.LocalDate.now();
-                            java.time.LocalDate dueDate = java.time.LocalDate.parse(dueDateStr);
-                            if (today.isAfter(dueDate)) {
-                                long days = java.time.temporal.ChronoUnit.DAYS.between(dueDate, today);
-                                double fineRate = 5000.0;
-                                try {
-                                    fineRate = Double.parseDouble(settingsService.getSetting("fine_rate", "5000"));
-                                } catch (Exception e) {
-                                    // fallback
-                                }
-                                fineAmount = days * fineRate;
-                                isOverdue = true;
-                            }
-
-                            if (isOverdue) {
-                                fineService.assessFines();
-                            }
-
-                            return transactionService.returnBook(txId, bookId);
+                            fineRate = Double.parseDouble(settingsService.getSetting("fine_rate", "5000"));
                         } catch (Exception ex) {
-                            ex.printStackTrace();
-                            return false;
+                            // ignore fallback
                         }
+                        fineAmount = days * fineRate;
+                        isOverdue = true;
                     }
 
-                    @Override
-                    protected void done() {
-                        try {
-                            boolean success = get();
-                            if (success) {
-                                if (fineAmount > 0) {
-                                    JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dikembalikan.\nDenda keterlambatan sebesar Rp " + String.format("%,.2f", fineAmount) + " telah dikenakan.", "Pengembalian Diproses", JOptionPane.WARNING_MESSAGE);
-                                } else {
-                                    JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dikembalikan. Tidak ada denda.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                                }
-                                loadTransactionsData(currentSearchQuery);
-                                clearForm();
-                            } else {
-                                JOptionPane.showMessageDialog(TransactionsPanel.this, "Gagal memproses pengembalian buku.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
-                            }
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                            JOptionPane.showMessageDialog(TransactionsPanel.this, "Kesalahan saat mengembalikan buku: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
-                        }
+                    if (isOverdue) {
+                        fineService.assessFines();
                     }
-                };
-                returnWorker.execute();
+
+                    boolean success = transactionService.returnBook(txId, bookId);
+                    if (success) {
+                        if (fineAmount > 0) {
+                            JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dikembalikan.\nDenda keterlambatan sebesar Rp " + String.format("%,.2f", fineAmount) + " telah dikenakan.", "Pengembalian Diproses", JOptionPane.WARNING_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(TransactionsPanel.this, "Buku berhasil dikembalikan. Tidak ada denda.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                        loadTransactionsData(currentSearchQuery);
+                        clearForm();
+                    } else {
+                        JOptionPane.showMessageDialog(TransactionsPanel.this, "Gagal memproses pengembalian buku.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(TransactionsPanel.this, "Kesalahan saat mengembalikan buku: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    btnReturnBook.setEnabled(true);
+                }
             }
         });
 
@@ -437,41 +453,32 @@ public class TransactionsPanel extends JPanel {
         if (btnPrevPage != null) btnPrevPage.setEnabled(false);
         if (btnNextPage != null) btnNextPage.setEnabled(false);
 
-        SwingWorker<List<Transaction>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<Transaction> doInBackground() {
-                if (searchQuery == null || searchQuery.trim().isEmpty()) {
-                    return transactionService.getAllTransactions(currentPage, pageSize);
-                } else {
-                    return transactionService.searchTransactions(searchQuery.trim(), currentPage, pageSize);
-                }
+        try {
+            List<Transaction> txs;
+            if (searchQuery == null || searchQuery.trim().isEmpty()) {
+                txs = transactionService.getAllTransactions(currentPage, pageSize);
+            } else {
+                txs = transactionService.searchTransactions(searchQuery.trim(), currentPage, pageSize);
             }
-            @Override
-            protected void done() {
-                try {
-                    List<Transaction> txs = get();
-                    for (Transaction tx : txs) {
-                        transactionsTableModel.addRow(new Object[]{
-                            tx.getTransactionId(), tx.getUserId(), tx.getBookId(),
-                            tx.getMemberCode(), tx.getBookTitle(),
-                            tx.getIssueDate(), tx.getDueDate(),
-                            tx.getReturnDate() == null ? "-" : tx.getReturnDate(),
-                            tx.getStatus()
-                        });
-                    }
-                    if (lblPage != null) {
-                        lblPage.setText("Halaman " + currentPage);
-                        btnPrevPage.setEnabled(currentPage > 1);
-                        btnNextPage.setEnabled(txs.size() == pageSize);
-                    }
-                    transactionsTitleLabel.setText("Riwayat Transaksi (" + transactionsTableModel.getRowCount() + " data ditampilkan)");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    transactionsTitleLabel.setText("Riwayat Transaksi (Gagal memuat data)");
-                }
+            for (Transaction tx : txs) {
+                transactionsTableModel.addRow(new Object[]{
+                    tx.getTransactionId(), tx.getUserId(), tx.getBookId(),
+                    tx.getMemberCode(), tx.getBookTitle(),
+                    tx.getIssueDate(), tx.getDueDate(),
+                    tx.getReturnDate() == null ? "-" : tx.getReturnDate(),
+                    tx.getStatus()
+                });
             }
-        };
-        worker.execute();
+            if (lblPage != null) {
+                lblPage.setText("Halaman " + currentPage);
+                btnPrevPage.setEnabled(currentPage > 1);
+                btnNextPage.setEnabled(txs.size() == pageSize);
+            }
+            transactionsTitleLabel.setText("Riwayat Transaksi (" + transactionsTableModel.getRowCount() + " data ditampilkan)");
+        } catch (Exception e) {
+            e.printStackTrace();
+            transactionsTitleLabel.setText("Riwayat Transaksi (Gagal memuat data)");
+        }
     }
 
     private void clearForm() {
@@ -492,26 +499,11 @@ public class TransactionsPanel extends JPanel {
         btnIssueBook.setEnabled(true);
         transactionsTable.clearSelection();
 
-        // Reset default borrow duration setting
-        SwingWorker<Integer, Void> durationLoader = new SwingWorker<>() {
-            @Override
-            protected Integer doInBackground() {
-                try {
-                    return Integer.parseInt(settingsService.getSetting("borrow_duration", "7"));
-                } catch (Exception e) {
-                    return 7;
-                }
-            }
-            @Override
-            protected void done() {
-                try {
-                    spinDuration.setValue(get());
-                } catch (Exception e) {
-                    // Ignore fallback
-                }
-            }
-        };
-        durationLoader.execute();
+        try {
+            spinDuration.setValue(Integer.parseInt(settingsService.getSetting("borrow_duration", "7")));
+        } catch (Exception e) {
+            spinDuration.setValue(7);
+        }
     }
 
     private void saveTransaction() {
@@ -554,52 +546,30 @@ public class TransactionsPanel extends JPanel {
         int bookId = Integer.parseInt(bookText);
         int duration = (Integer) spinDuration.getValue();
 
-        SwingWorker<Integer, Void> issueWorker = new SwingWorker<>() {
-            @Override
-            protected Integer doInBackground() {
-                return transactionService.issueBook(userId, bookId, duration);
-            }
-
-            @Override
-            protected void done() {
-                btnIssueBook.setEnabled(true);
-                try {
-                    int newTxId = get();
-                    if (newTxId > 0) {
-                        loadTransactionsData(currentSearchQuery);
-                        clearForm();
-                        // Ask user if they want to print receipt
-                        int choice = JOptionPane.showConfirmDialog(
-                            TransactionsPanel.this,
-                            "Buku berhasil dipinjamkan (Transaksi #" + newTxId + ").\nApakah Anda ingin mencetak nota transaksi?",
-                            "Pinjamkan Sukses",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE
-                        );
-                        if (choice == JOptionPane.YES_OPTION) {
-                            printReceipt(newTxId);
-                        }
-                    } else {
-                        lblError.setText("Gagal meminjamkan buku. Buku mungkin sedang kosong.");
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    lblError.setText("Terjadi kesalahan: " + ex.getMessage());
+        try {
+            int newTxId = transactionService.issueBook(userId, bookId, duration);
+            if (newTxId > 0) {
+                loadTransactionsData(currentSearchQuery);
+                clearForm();
+                // Ask user if they want to print receipt
+                int choice = JOptionPane.showConfirmDialog(
+                    TransactionsPanel.this,
+                    "Buku berhasil dipinjamkan (Transaksi #" + newTxId + ").\nApakah Anda ingin mencetak nota transaksi?",
+                    "Pinjamkan Sukses",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                if (choice == JOptionPane.YES_OPTION) {
+                    printReceipt(newTxId);
                 }
+            } else {
+                lblError.setText("Gagal meminjamkan buku. Buku mungkin sedang kosong.");
             }
-        };
-        issueWorker.execute();
-    }
-
-    private static class MemberVerificationResult {
-        final User user;
-        final int activeLoans;
-        final int maxLimit;
-        
-        MemberVerificationResult(User user, int activeLoans, int maxLimit) {
-            this.user = user;
-            this.activeLoans = activeLoans;
-            this.maxLimit = maxLimit;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            lblError.setText("Terjadi kesalahan: " + ex.getMessage());
+        } finally {
+            btnIssueBook.setEnabled(true);
         }
     }
 
@@ -611,47 +581,32 @@ public class TransactionsPanel extends JPanel {
             return;
         }
         
-        SwingWorker<MemberVerificationResult, Void> worker = new SwingWorker<>() {
-            @Override
-            protected MemberVerificationResult doInBackground() {
-                User u = userService.getUserByMemberCode(codeText);
-                if (u != null) {
-                    int activeLoans = transactionService.getActiveLoansCount(u.getUserId());
-                    int maxLimit = Integer.parseInt(settingsService.getSetting("max_borrow_limit", "3"));
-                    return new MemberVerificationResult(u, activeLoans, maxLimit);
-                }
-                return null;
-            }
-            @Override
-            protected void done() {
-                try {
-                    MemberVerificationResult result = get();
-                    if (result != null && result.user != null) {
-                        User u = result.user;
-                        String roleIndo = "Admin".equalsIgnoreCase(u.getRole()) ? "Admin" : "Anggota";
-                        String statusIndo = "Active".equalsIgnoreCase(u.getStatus()) ? "Aktif" : "Ditangguhkan";
-                        if ("Suspended".equals(u.getStatus())) {
-                            outputLabel.setText("⚠ " + u.getFullName() + " (Ditangguhkan - TIDAK BISA MEMINJAM)");
-                            outputLabel.setForeground(new Color(230, 80, 80));
-                        } else if (result.activeLoans >= result.maxLimit) {
-                            outputLabel.setText("⚠ " + u.getFullName() + " (Batas pinjam terpenuhi: " + result.activeLoans + "/" + result.maxLimit + " buku)");
-                            outputLabel.setForeground(new Color(230, 80, 80));
-                        } else {
-                            outputLabel.setText("✔ " + u.getFullName() + " (" + roleIndo + " - " + statusIndo + " - Pinjam: " + result.activeLoans + "/" + result.maxLimit + ")");
-                            outputLabel.setForeground(new Color(101, 183, 108));
-                            validatedUserId[0] = u.getUserId();
-                        }
-                    } else {
-                        outputLabel.setText("❌ Anggota tidak ditemukan");
-                        outputLabel.setForeground(new Color(230, 80, 80));
-                    }
-                } catch (Exception ex) {
-                    outputLabel.setText("❌ Kesalahan memeriksa anggota");
+        try {
+            User u = userService.getUserByMemberCode(codeText);
+            if (u != null) {
+                int activeLoans = transactionService.getActiveLoansCount(u.getUserId());
+                int maxLimit = Integer.parseInt(settingsService.getSetting("max_borrow_limit", "3"));
+                String roleIndo = "Admin".equalsIgnoreCase(u.getRole()) ? "Admin" : "Anggota";
+                String statusIndo = "Active".equalsIgnoreCase(u.getStatus()) ? "Aktif" : "Ditangguhkan";
+                if ("Suspended".equals(u.getStatus())) {
+                    outputLabel.setText("⚠ " + u.getFullName() + " (Ditangguhkan - TIDAK BISA MEMINJAM)");
                     outputLabel.setForeground(new Color(230, 80, 80));
+                } else if (activeLoans >= maxLimit) {
+                    outputLabel.setText("⚠ " + u.getFullName() + " (Batas pinjam terpenuhi: " + activeLoans + "/" + maxLimit + " buku)");
+                    outputLabel.setForeground(new Color(230, 80, 80));
+                } else {
+                    outputLabel.setText("✔ " + u.getFullName() + " (" + roleIndo + " - " + statusIndo + " - Pinjam: " + activeLoans + "/" + maxLimit + ")");
+                    outputLabel.setForeground(new Color(101, 183, 108));
+                    validatedUserId[0] = u.getUserId();
                 }
+            } else {
+                outputLabel.setText("❌ Anggota tidak ditemukan");
+                outputLabel.setForeground(new Color(230, 80, 80));
             }
-        };
-        worker.execute();
+        } catch (Exception ex) {
+            outputLabel.setText("❌ Kesalahan memeriksa anggota");
+            outputLabel.setForeground(new Color(230, 80, 80));
+        }
     }
 
     private void verifyBook(String idText, JLabel outputLabel) {
@@ -662,54 +617,36 @@ public class TransactionsPanel extends JPanel {
         }
         try {
             int bookId = Integer.parseInt(idText);
-            SwingWorker<Book, Void> worker = new SwingWorker<>() {
-                @Override
-                protected Book doInBackground() {
-                    return bookService.getBookById(bookId);
+            Book b = bookService.getBookById(bookId);
+            if (b != null) {
+                if (b.getAvailableCopies() > 0) {
+                    outputLabel.setText("✔ " + b.getTitle() + " (" + b.getAvailableCopies() + " salinan tersedia)");
+                    outputLabel.setForeground(new Color(101, 183, 108));
+                } else {
+                    outputLabel.setText("⚠ " + b.getTitle() + " (Kosong - TIDAK BISA MEMINJAM)");
+                    outputLabel.setForeground(new Color(230, 80, 80));
                 }
-                @Override
-                protected void done() {
-                    try {
-                        Book b = get();
-                        if (b != null) {
-                            if (b.getAvailableCopies() > 0) {
-                                outputLabel.setText("✔ " + b.getTitle() + " (" + b.getAvailableCopies() + " salinan tersedia)");
-                                outputLabel.setForeground(new Color(101, 183, 108));
-                            } else {
-                                outputLabel.setText("⚠ " + b.getTitle() + " (Kosong - TIDAK BISA MEMINJAM)");
-                                outputLabel.setForeground(new Color(230, 80, 80));
-                            }
-                        } else {
-                            outputLabel.setText("❌ Buku tidak ditemukan");
-                            outputLabel.setForeground(new Color(230, 80, 80));
-                        }
-                    } catch (Exception ex) {
-                        outputLabel.setText("❌ Kesalahan memeriksa buku");
-                        outputLabel.setForeground(new Color(230, 80, 80));
-                    }
-                }
-            };
-            worker.execute();
+            } else {
+                outputLabel.setText("❌ Buku tidak ditemukan");
+                outputLabel.setForeground(new Color(230, 80, 80));
+            }
         } catch (NumberFormatException e) {
             outputLabel.setText("❌ Format ID tidak valid");
+            outputLabel.setForeground(new Color(230, 80, 80));
+        } catch (Exception ex) {
+            outputLabel.setText("❌ Kesalahan memeriksa buku");
             outputLabel.setForeground(new Color(230, 80, 80));
         }
     }
 
-    /**
-     * Opens the JasperViewer with the transaction receipt for the given transaction ID.
-     * Runs the report compilation and fill in a background SwingWorker thread to keep the UI responsive.
-     */
     private void printReceipt(int transactionId) {
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                Map<String, Object> params = new HashMap<>();
-                params.put("transaction_id", transactionId);
-                ReportGenerator.showReportViewer("/reports/transaction_receipt.jrxml", params);
-                return null;
-            }
-        };
-        worker.execute();
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("transaction_id", transactionId);
+            ReportGenerator.showReportViewer("/reports/transaction_receipt.jrxml", params);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal mencetak nota: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

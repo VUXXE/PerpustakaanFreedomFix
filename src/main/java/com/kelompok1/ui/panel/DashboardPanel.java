@@ -1,13 +1,13 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.DailyStats;
-import com.kelompok1.model.Book;
-import com.kelompok1.model.Transaction;
-import com.kelompok1.service.BookService;
-import com.kelompok1.service.FineService;
-import com.kelompok1.service.TransactionService;
-import com.kelompok1.service.UserService;
+import com.kelompok1.model.Models.DailyStats;
+import com.kelompok1.model.Models.Book;
+import com.kelompok1.model.Models.Transaction;
+import com.kelompok1.service.Services.BookService;
+import com.kelompok1.service.Services.FineService;
+import com.kelompok1.service.Services.TransactionService;
+import com.kelompok1.service.Services.UserService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;

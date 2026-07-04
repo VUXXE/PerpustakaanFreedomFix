@@ -15,9 +15,9 @@
     <queryString>
         <![CDATA[
         SELECT f.fine_id, u.member_code, u.full_name, b.title,
-               f.amount::double precision AS amount,
+               f.amount AS amount,
                f.status,
-               COALESCE(f.updated_at::text, '') AS updated_at
+               COALESCE(CAST(f.updated_at AS CHAR), '') AS updated_at
         FROM fines f
         JOIN transactions t ON f.transaction_id = t.transaction_id
         JOIN users u ON t.user_id = u.user_id

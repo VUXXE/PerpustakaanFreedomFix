@@ -1,7 +1,7 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.service.SettingsService;
+import com.kelompok1.service.Services.SettingsService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;

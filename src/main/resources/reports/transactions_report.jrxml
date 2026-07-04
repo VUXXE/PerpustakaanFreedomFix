@@ -15,9 +15,9 @@
     <queryString>
         <![CDATA[
         SELECT t.transaction_id, u.member_code, u.full_name, b.title,
-               t.issue_date::text AS issue_date,
-               t.due_date::text AS due_date,
-               COALESCE(t.return_date::text, '') AS return_date,
+               t.issue_date AS issue_date,
+               t.due_date AS due_date,
+               COALESCE(t.return_date, '') AS return_date,
                t.status
         FROM transactions t
         JOIN users u ON t.user_id = u.user_id

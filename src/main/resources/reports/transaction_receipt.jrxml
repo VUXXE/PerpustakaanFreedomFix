@@ -16,9 +16,9 @@
         <![CDATA[
         SELECT
             t.transaction_id,
-            t.issue_date::text AS issue_date,
-            t.due_date::text AS due_date,
-            COALESCE(t.return_date::text, '') AS return_date,
+            t.issue_date AS issue_date,
+            t.due_date AS due_date,
+            COALESCE(t.return_date, '') AS return_date,
             t.status,
             u.member_code,
             u.full_name,
