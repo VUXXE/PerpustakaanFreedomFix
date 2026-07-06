@@ -21,6 +21,12 @@ public class ReportGenerator {
     public static boolean generateReport(String jrxmlPath, String outputPdfPath, Map<String, Object> parameters) {
         try (Connection conn = DatabaseHelper.getConnection()) {
             
+            // Add logo path dynamically
+            if (parameters == null) {
+                parameters = new java.util.HashMap<>();
+            }
+            parameters.put("logoPath", new java.io.File("LOGO2.png").getAbsolutePath());
+
             // 1. Load the design
             InputStream is = ReportGenerator.class.getResourceAsStream(jrxmlPath);
             if (is == null) {
@@ -52,6 +58,12 @@ public class ReportGenerator {
      */
     public static void showReportViewer(String jrxmlPath, Map<String, Object> parameters) {
         try (Connection conn = DatabaseHelper.getConnection()) {
+            // Add logo path dynamically
+            if (parameters == null) {
+                parameters = new java.util.HashMap<>();
+            }
+            parameters.put("logoPath", new java.io.File("LOGO2.png").getAbsolutePath());
+
             // 1. Load the design
             InputStream is = ReportGenerator.class.getResourceAsStream(jrxmlPath);
             if (is == null) {

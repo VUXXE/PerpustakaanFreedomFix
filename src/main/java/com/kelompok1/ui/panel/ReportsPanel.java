@@ -1,11 +1,11 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Models.Book;
-import com.kelompok1.model.Models.DailyStats;
+import com.kelompok1.model.Book;
+import com.kelompok1.model.DailyStats;
 import com.kelompok1.report.ReportGenerator;
-import com.kelompok1.service.Services.BookService;
-import com.kelompok1.service.Services.TransactionService;
+import com.kelompok1.service.BookService;
+import com.kelompok1.service.TransactionService;
 import com.kelompok1.util.DesignSystem;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;

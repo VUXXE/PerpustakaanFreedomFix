@@ -33,7 +33,7 @@ SELECT
     t.transaction_id,
     DATEDIFF(CURDATE(), CAST(t.due_date AS DATE)) *
     COALESCE(
-        (SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE key = 'fine_rate'),
+        (SELECT CAST(value AS DECIMAL(10,2)) FROM settings WHERE `key` = 'fine_rate'),
         5000.0
     )
 FROM transactions t
@@ -72,3 +72,28 @@ JOIN transactions t ON f.transaction_id = t.transaction_id
 JOIN users u ON t.user_id = u.user_id
 JOIN books b ON t.book_id = b.book_id
 ORDER BY f.fine_id DESC;
+
+-- Step 5: Tambahan 20 dummy denda untuk testing
+-- Kita buat 20 transaksi baru secara acak menggunakan cross join (dibatasi 20)
+INSERT INTO transactions (user_id, book_id, issue_date, due_date, return_date, status)
+SELECT u.user_id, b.book_id, DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 16 DAY), DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'Returned'
+FROM users u 
+JOIN books b 
+LIMIT 20;
+
+-- Setengah lunas (10)
+INSERT INTO fines (transaction_id, amount, status, updated_at)
+SELECT transaction_id, (RAND() * 50000) + 5000, 'Paid', CURRENT_TIMESTAMP
+FROM transactions
+ORDER BY transaction_id DESC
+LIMIT 10;
+
+-- Setengah belum lunas (10)
+INSERT INTO fines (transaction_id, amount, status, updated_at)
+SELECT transaction_id, (RAND() * 50000) + 5000, 'Unpaid', CURRENT_TIMESTAMP
+FROM transactions
+WHERE transaction_id NOT IN (
+    SELECT transaction_id FROM fines
+)
+ORDER BY transaction_id DESC
+LIMIT 10;

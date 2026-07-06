@@ -1,15 +1,15 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Models.Book;
-import com.kelompok1.model.Models.Transaction;
-import com.kelompok1.model.Models.User;
+import com.kelompok1.model.Book;
+import com.kelompok1.model.Transaction;
+import com.kelompok1.model.User;
 import com.kelompok1.report.ReportGenerator;
-import com.kelompok1.service.Services.BookService;
-import com.kelompok1.service.Services.FineService;
-import com.kelompok1.service.Services.SettingsService;
-import com.kelompok1.service.Services.TransactionService;
-import com.kelompok1.service.Services.UserService;
+import com.kelompok1.service.BookService;
+import com.kelompok1.service.FineService;
+import com.kelompok1.service.SettingsService;
+import com.kelompok1.service.TransactionService;
+import com.kelompok1.service.UserService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -44,11 +44,26 @@ public class TransactionsPanel extends JPanel {
     private JLabel lblBookTitle;
     private JSpinner spinDuration;
     private JButton btnReturnBook;
+    private JButton btnMarkLost;
     private JButton btnIssueBook;
     private JButton btnPrintReceipt;
     private JLabel lblError;
     private final int[] validatedUserId = new int[]{-1};
     private int selectedTransactionId = -1;
+
+    // Beautiful Split Preview Labels
+    private JLabel lblPreviewMemberName;
+    private JLabel lblPreviewMemberCode;
+    private JLabel lblPreviewMemberContact;
+    private JLabel lblPreviewMemberAddress;
+    private JLabel lblPreviewBookTitle;
+    private JLabel lblPreviewBookAuthor;
+    private JLabel lblPreviewBookMeta;
+    private JLabel lblPreviewBookStock;
+
+    // Debounce Timers for autocomplete search
+    private javax.swing.Timer memberDebounceTimer;
+    private javax.swing.Timer bookDebounceTimer;
 
     public TransactionsPanel() {
         this.transactionService = new TransactionService();
@@ -56,6 +71,11 @@ public class TransactionsPanel extends JPanel {
         this.bookService = new BookService();
         this.fineService = new FineService();
         this.settingsService = new SettingsService();
+        
+        this.memberDebounceTimer = new javax.swing.Timer(150, null);
+        this.memberDebounceTimer.setRepeats(false);
+        this.bookDebounceTimer = new javax.swing.Timer(150, null);
+        this.bookDebounceTimer.setRepeats(false);
         
         setLayout(new BorderLayout());
         setBackground(UIManager.getColor("Panel.background"));
@@ -72,7 +92,7 @@ public class TransactionsPanel extends JPanel {
 
         // Instantiate form components
         txtMemberCode = UIUtils.createFormTextField("Masukkan Kode/Nama Anggota...");
-        txtBookId = UIUtils.createFormTextField("Masukkan ID Buku (angka)");
+        txtBookId = UIUtils.createFormTextField("Masukkan ID/Judul Buku...");
 
         lblMemberName = new JLabel(" ");
         lblMemberName.putClientProperty(FlatClientProperties.STYLE, "font: -1");
@@ -97,46 +117,236 @@ public class TransactionsPanel extends JPanel {
 
         // Suggestions Popup for Member Name Search
         JPopupMenu memberSuggestPopup = new JPopupMenu();
+        JList<User> memberList = new JList<>();
+        memberList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        memberList.setFocusable(true);
+        
+        memberList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel lbl = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof User) {
+                    User u = (User) value;
+                    lbl.setText(u.getFullName() + " (" + u.getMemberCode() + ")");
+                }
+                lbl.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+                return lbl;
+            }
+        });
+        
+        JScrollPane memberScroll = new JScrollPane(memberList) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(txtMemberCode.getWidth(), Math.min(180, memberList.getPreferredSize().height + 4));
+            }
+        };
+        memberScroll.setBorder(null);
+        memberSuggestPopup.add(memberScroll);
+
+        memberList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                User selected = memberList.getSelectedValue();
+                if (selected != null) {
+                    txtMemberCode.setText(selected.getMemberCode());
+                    memberSuggestPopup.setVisible(false);
+                    txtBookId.requestFocusInWindow();
+                }
+            }
+        });
+
+        memberList.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+                    User selected = memberList.getSelectedValue();
+                    if (selected != null) {
+                        txtMemberCode.setText(selected.getMemberCode());
+                        memberSuggestPopup.setVisible(false);
+                        txtBookId.requestFocusInWindow();
+                    }
+                } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
+                    memberSuggestPopup.setVisible(false);
+                    txtMemberCode.requestFocusInWindow();
+                }
+            }
+        });
+
         txtMemberCode.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 int keyCode = e.getKeyCode();
-                if (keyCode == java.awt.event.KeyEvent.VK_ESCAPE || keyCode == java.awt.event.KeyEvent.VK_ENTER ||
-                    keyCode == java.awt.event.KeyEvent.VK_UP || keyCode == java.awt.event.KeyEvent.VK_DOWN) {
+                if (keyCode == java.awt.event.KeyEvent.VK_ESCAPE || keyCode == java.awt.event.KeyEvent.VK_ENTER) {
+                    return;
+                }
+                if (keyCode == java.awt.event.KeyEvent.VK_DOWN) {
+                    if (memberSuggestPopup.isVisible() && memberList.getModel().getSize() > 0) {
+                        memberList.setSelectedIndex(0);
+                        memberList.requestFocusInWindow();
+                    }
                     return;
                 }
 
                 String text = txtMemberCode.getText().trim();
                 if (text.length() >= 2) {
-                    try {
-                        List<User> matches = userService.searchUsers(text, 1, 8);
-                        memberSuggestPopup.removeAll();
-
-                        // Hide suggestion if fully matched
-                        if (matches.size() == 1 && matches.get(0).getMemberCode().equalsIgnoreCase(text)) {
-                            memberSuggestPopup.setVisible(false);
-                            return;
-                        }
-
-                        if (!matches.isEmpty()) {
-                            for (User u : matches) {
-                                JMenuItem item = new JMenuItem(u.getFullName() + " (" + u.getMemberCode() + ")");
-                                item.addActionListener(ae -> {
-                                    txtMemberCode.setText(u.getMemberCode());
-                                    memberSuggestPopup.setVisible(false);
-                                });
-                                memberSuggestPopup.add(item);
-                            }
-                            memberSuggestPopup.show(txtMemberCode, 0, txtMemberCode.getHeight());
-                            txtMemberCode.requestFocus();
-                        } else {
-                            memberSuggestPopup.setVisible(false);
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                    for (java.awt.event.ActionListener al : memberDebounceTimer.getActionListeners()) {
+                        memberDebounceTimer.removeActionListener(al);
                     }
+                    memberDebounceTimer.addActionListener(ae -> {
+                        new SwingWorker<List<User>, Void>() {
+                            @Override
+                            protected List<User> doInBackground() throws Exception {
+                                return userService.searchUsers(text, 1, 8);
+                            }
+
+                            @Override
+                            protected void done() {
+                                try {
+                                    List<User> matches = get();
+                                    if (matches.size() == 1 && matches.get(0).getMemberCode().equalsIgnoreCase(text)) {
+                                        memberSuggestPopup.setVisible(false);
+                                        return;
+                                    }
+
+                                    if (!matches.isEmpty()) {
+                                        DefaultListModel<User> model = new DefaultListModel<>();
+                                        for (User u : matches) {
+                                            model.addElement(u);
+                                        }
+                                        memberList.setModel(model);
+                                        if (txtMemberCode.isShowing()) {
+                                            memberSuggestPopup.show(txtMemberCode, 0, txtMemberCode.getHeight());
+                                        }
+                                    } else {
+                                        memberSuggestPopup.setVisible(false);
+                                    }
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }.execute();
+                    });
+                    memberDebounceTimer.restart();
                 } else {
                     memberSuggestPopup.setVisible(false);
+                }
+            }
+        });
+
+        // Suggestions Popup for Book Search (by Title/Author/ID)
+        JPopupMenu bookSuggestPopup = new JPopupMenu();
+        JList<Book> bookList = new JList<>();
+        bookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        bookList.setFocusable(true);
+        
+        bookList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel lbl = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Book) {
+                    Book b = (Book) value;
+                    lbl.setText(b.getTitle() + " (ID: " + b.getBookId() + ")");
+                }
+                lbl.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+                return lbl;
+            }
+        });
+        
+        JScrollPane bookScroll = new JScrollPane(bookList) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(txtBookId.getWidth(), Math.min(180, bookList.getPreferredSize().height + 4));
+            }
+        };
+        bookScroll.setBorder(null);
+        bookSuggestPopup.add(bookScroll);
+
+        bookList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                Book selected = bookList.getSelectedValue();
+                if (selected != null) {
+                    txtBookId.setText(String.valueOf(selected.getBookId()));
+                    bookSuggestPopup.setVisible(false);
+                    spinDuration.requestFocusInWindow();
+                }
+            }
+        });
+
+        bookList.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+                    Book selected = bookList.getSelectedValue();
+                    if (selected != null) {
+                        txtBookId.setText(String.valueOf(selected.getBookId()));
+                        bookSuggestPopup.setVisible(false);
+                        spinDuration.requestFocusInWindow();
+                    }
+                } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
+                    bookSuggestPopup.setVisible(false);
+                    txtBookId.requestFocusInWindow();
+                }
+            }
+        });
+
+        txtBookId.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                if (keyCode == java.awt.event.KeyEvent.VK_ESCAPE || keyCode == java.awt.event.KeyEvent.VK_ENTER) {
+                    return;
+                }
+                if (keyCode == java.awt.event.KeyEvent.VK_DOWN) {
+                    if (bookSuggestPopup.isVisible() && bookList.getModel().getSize() > 0) {
+                        bookList.setSelectedIndex(0);
+                        bookList.requestFocusInWindow();
+                    }
+                    return;
+                }
+
+                String text = txtBookId.getText().trim();
+                if (text.length() >= 2) {
+                    for (java.awt.event.ActionListener al : bookDebounceTimer.getActionListeners()) {
+                        bookDebounceTimer.removeActionListener(al);
+                    }
+                    bookDebounceTimer.addActionListener(ae -> {
+                        new SwingWorker<List<Book>, Void>() {
+                            @Override
+                            protected List<Book> doInBackground() throws Exception {
+                                return bookService.searchBooks(text, 1, 8);
+                            }
+
+                            @Override
+                            protected void done() {
+                                try {
+                                    List<Book> matches = get();
+                                    if (matches.size() == 1 && String.valueOf(matches.get(0).getBookId()).equalsIgnoreCase(text)) {
+                                        bookSuggestPopup.setVisible(false);
+                                        return;
+                                    }
+
+                                    if (!matches.isEmpty()) {
+                                        DefaultListModel<Book> model = new DefaultListModel<>();
+                                        for (Book b : matches) {
+                                            model.addElement(b);
+                                        }
+                                        bookList.setModel(model);
+                                        if (txtBookId.isShowing()) {
+                                            bookSuggestPopup.show(txtBookId, 0, txtBookId.getHeight());
+                                        }
+                                    } else {
+                                        bookSuggestPopup.setVisible(false);
+                                    }
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }.execute();
+                    });
+                    bookDebounceTimer.restart();
+                } else {
+                    bookSuggestPopup.setVisible(false);
                 }
             }
         });
@@ -160,32 +370,28 @@ public class TransactionsPanel extends JPanel {
             }
         });
 
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setOpaque(false);
-        formPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, DesignSystem.OUTLINE_VARIANT),
-            BorderFactory.createEmptyBorder(10, 0, 15, 0)
-        ));
+        // Action Listeners for Keyboard Navigation UX
+        txtMemberCode.addActionListener(e -> txtBookId.requestFocusInWindow());
+        txtBookId.addActionListener(e -> spinDuration.requestFocusInWindow());
+        
+        JSpinner.DefaultEditor spinEditor = (JSpinner.DefaultEditor) spinDuration.getEditor();
+        spinEditor.getTextField().addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+                    if (btnIssueBook.isEnabled()) {
+                        btnIssueBook.doClick();
+                    }
+                }
+            }
+        });
 
-        GridBagConstraints fGbc = new GridBagConstraints();
-        fGbc.fill = GridBagConstraints.HORIZONTAL;
-        fGbc.insets = new Insets(4, 6, 4, 6);
-        fGbc.weightx = 0.33;
-
-        int r = 0;
-
-        // Row 0: Form Header Title & Subtitle
-        fGbc.gridy = r;
-        fGbc.gridx = 0;
-        fGbc.gridwidth = 3;
-        fGbc.weightx = 1.0;
-        fGbc.insets = new Insets(4, 0, 4, 0);
-
+        // Header Title Panel
         lblFormTitle = new JLabel("Form Transaksi Peminjaman");
         lblFormTitle.putClientProperty(FlatClientProperties.STYLE, "font: bold +4");
         lblFormTitle.setForeground(DesignSystem.ON_SURFACE);
 
-        lblFormSubtitle = new JLabel("(Silakan lengkapi data anggota dan buku.)");
+        lblFormSubtitle = new JLabel("(Lengkapi data anggota dan buku di bawah.)");
         lblFormSubtitle.setFont(DesignSystem.bodyFont(10f, Font.PLAIN));
         lblFormSubtitle.setForeground(UIManager.getColor("Label.disabledForeground"));
 
@@ -195,58 +401,79 @@ public class TransactionsPanel extends JPanel {
         titlePanel.add(lblFormTitle);
         titlePanel.add(Box.createHorizontalStrut(8));
         titlePanel.add(lblFormSubtitle);
-        formPanel.add(titlePanel, fGbc);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        northWrapper.add(titlePanel);
 
-        // Row 1: Labels
-        r++;
-        fGbc.gridy = r;
-        fGbc.gridwidth = 1;
-        fGbc.weightx = 0.33;
-        fGbc.insets = new Insets(10, 6, 0, 6);
+        // Split Layout Panel (Left Card and Right Preview Cards)
+        JPanel splitFormPanel = new JPanel(new GridBagLayout());
+        splitFormPanel.setOpaque(false);
+        splitFormPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, DesignSystem.OUTLINE_VARIANT),
+            BorderFactory.createEmptyBorder(0, 0, 15, 0)
+        ));
 
-        fGbc.gridx = 0;
+        GridBagConstraints splitGbc = new GridBagConstraints();
+        splitGbc.fill = GridBagConstraints.BOTH;
+        splitGbc.weighty = 1.0;
+
+        // ─── LEFT COLUMN: FORM INPUT CARD ───
+        JPanel leftCardPanel = new JPanel(new GridBagLayout());
+        leftCardPanel.setBackground(UIManager.getColor("Component.background"));
+        leftCardPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DesignSystem.OUTLINE_VARIANT, 1, true),
+            BorderFactory.createEmptyBorder(16, 20, 16, 20)
+        ));
+        leftCardPanel.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+
+        GridBagConstraints lGbc = new GridBagConstraints();
+        lGbc.fill = GridBagConstraints.HORIZONTAL;
+        lGbc.gridx = 0;
+        lGbc.weightx = 1.0;
+        lGbc.insets = new Insets(4, 0, 4, 0);
+
+        int leftRow = 0;
+
+        // Label Anggota
+        lGbc.gridy = leftRow++;
         JLabel lblMem = new JLabel("Kode/Nama Anggota*");
         lblMem.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblMem.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblMem, fGbc);
+        leftCardPanel.add(lblMem, lGbc);
 
-        fGbc.gridx = 1;
-        JLabel lblBkB = new JLabel("ID Buku*");
+        // Input Anggota
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(0, 0, 10, 0);
+        leftCardPanel.add(txtMemberCode, lGbc);
+
+        // Label Buku
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(4, 0, 4, 0);
+        JLabel lblBkB = new JLabel("ID/Judul Buku*");
         lblBkB.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblBkB.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblBkB, fGbc);
+        leftCardPanel.add(lblBkB, lGbc);
 
-        fGbc.gridx = 2;
+        // Input Buku
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(0, 0, 10, 0);
+        leftCardPanel.add(txtBookId, lGbc);
+
+        // Label Durasi
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(4, 0, 4, 0);
         JLabel lblDur = new JLabel("Durasi Peminjaman (Hari)*");
         lblDur.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
         lblDur.setForeground(DesignSystem.ON_SURFACE_VARIANT);
-        formPanel.add(lblDur, fGbc);
+        leftCardPanel.add(lblDur, lGbc);
 
-        // Row 2: Fields
-        r++;
-        fGbc.gridy = r;
-        fGbc.insets = new Insets(2, 6, 4, 6);
+        // Input Durasi
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(0, 0, 16, 0);
+        leftCardPanel.add(spinDuration, lGbc);
 
-        fGbc.gridx = 0; formPanel.add(txtMemberCode, fGbc);
-        fGbc.gridx = 1; formPanel.add(txtBookId, fGbc);
-        fGbc.gridx = 2; formPanel.add(spinDuration, fGbc);
-
-        // Row 3: Verification Feedback Labels
-        r++;
-        fGbc.gridy = r;
-        fGbc.insets = new Insets(0, 6, 6, 6);
-
-        fGbc.gridx = 0; formPanel.add(lblMemberName, fGbc);
-        fGbc.gridx = 1; formPanel.add(lblBookTitle, fGbc);
-
-        // Row 4: Buttons
-        r++;
-        fGbc.gridy = r;
-        fGbc.gridx = 0;
-        fGbc.gridwidth = 3;
-        fGbc.weightx = 1.0;
-        fGbc.insets = new Insets(12, 6, 6, 6);
-
+        // Buttons
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(8, 0, 4, 0);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
 
@@ -260,6 +487,12 @@ public class TransactionsPanel extends JPanel {
         btnReturnBook.setEnabled(false);
         buttonPanel.add(btnReturnBook);
 
+        btnMarkLost = new JButton("Buku Hilang");
+        DesignSystem.applySecondaryButton(btnMarkLost);
+        btnMarkLost.setForeground(DesignSystem.ERROR); // Red text to indicate danger
+        btnMarkLost.setEnabled(false);
+        buttonPanel.add(btnMarkLost);
+
         JButton btnCancel = new JButton("Batal");
         DesignSystem.applySecondaryButton(btnCancel);
         btnCancel.addActionListener(e -> clearForm());
@@ -270,21 +503,61 @@ public class TransactionsPanel extends JPanel {
         btnIssueBook.addActionListener(e -> saveTransaction());
         buttonPanel.add(btnIssueBook);
 
-        formPanel.add(buttonPanel, fGbc);
+        leftCardPanel.add(buttonPanel, lGbc);
 
-        // Row 5: Error Label
-        r++;
-        fGbc.gridy = r;
-        fGbc.gridx = 0;
-        fGbc.gridwidth = 3;
-        fGbc.weightx = 1.0;
-        fGbc.insets = new Insets(4, 6, 0, 6);
-
+        // Error Label
+        lGbc.gridy = leftRow++;
+        lGbc.insets = new Insets(6, 0, 0, 0);
         lblError = new JLabel(" ");
         lblError.putClientProperty(FlatClientProperties.STYLE, "foreground: $Component.error.focusedBorderColor; font: bold -1");
-        formPanel.add(lblError, fGbc);
+        leftCardPanel.add(lblError, lGbc);
 
-        northWrapper.add(formPanel);
+        // Add leftCardPanel to splitFormPanel
+        splitGbc.gridx = 0;
+        splitGbc.weightx = 0.55;
+        splitGbc.insets = new Insets(0, 0, 0, 15);
+        splitFormPanel.add(leftCardPanel, splitGbc);
+
+        // ─── RIGHT COLUMN: PREVIEW CARDS STACK ───
+        JPanel rightPreviewPanel = new JPanel(new GridBagLayout());
+        rightPreviewPanel.setOpaque(false);
+
+        lblPreviewMemberName = new JLabel("Belum Memilih Anggota");
+        lblPreviewMemberCode = new JLabel("-Masukkan nama/kode anggota-");
+        lblPreviewMemberContact = new JLabel(" ");
+        lblPreviewMemberAddress = new JLabel(" ");
+
+        lblPreviewBookTitle = new JLabel("Belum Memilih Buku");
+        lblPreviewBookAuthor = new JLabel("-Masukkan judul/ID buku-");
+        lblPreviewBookMeta = new JLabel(" ");
+        lblPreviewBookStock = new JLabel(" ");
+
+        JPanel cardMemberPreview = createPreviewCard("DETAIL ANGGOTA", lblPreviewMemberName, lblPreviewMemberCode, 
+            new JLabel[]{ lblPreviewMemberContact, lblPreviewMemberAddress }, lblMemberName);
+        JPanel cardBookPreview = createPreviewCard("DETAIL BUKU", lblPreviewBookTitle, lblPreviewBookAuthor, 
+            new JLabel[]{ lblPreviewBookMeta, lblPreviewBookStock }, lblBookTitle);
+
+        GridBagConstraints rGbc = new GridBagConstraints();
+        rGbc.fill = GridBagConstraints.BOTH;
+        rGbc.gridx = 0;
+        rGbc.weightx = 1.0;
+        rGbc.weighty = 0.5;
+
+        rGbc.gridy = 0;
+        rGbc.insets = new Insets(0, 0, 12, 0);
+        rightPreviewPanel.add(cardMemberPreview, rGbc);
+
+        rGbc.gridy = 1;
+        rGbc.insets = new Insets(0, 0, 0, 0);
+        rightPreviewPanel.add(cardBookPreview, rGbc);
+
+        // Add rightPreviewPanel to splitFormPanel
+        splitGbc.gridx = 1;
+        splitGbc.weightx = 0.45;
+        splitGbc.insets = new Insets(0, 0, 0, 0);
+        splitFormPanel.add(rightPreviewPanel, splitGbc);
+
+        northWrapper.add(splitFormPanel);
         add(northWrapper, BorderLayout.NORTH);
 
         // ─── 2. TABLE PANEL (CENTER - BELOW FORM) ───────────────────────────
@@ -319,7 +592,8 @@ public class TransactionsPanel extends JPanel {
             boolean hasSelection = selectedRow != -1;
             if (hasSelection) {
                 String status = (String) transactionsTableModel.getValueAt(selectedRow, 8);
-                btnReturnBook.setEnabled("Issued".equals(status));
+                btnReturnBook.setEnabled("Dipinjam".equals(status));
+                btnMarkLost.setEnabled("Dipinjam".equals(status));
                 selectedTransactionId = (Integer) transactionsTableModel.getValueAt(selectedRow, 0);
                 btnPrintReceipt.setEnabled(true);
 
@@ -328,6 +602,7 @@ public class TransactionsPanel extends JPanel {
                 txtBookId.setText(String.valueOf(transactionsTableModel.getValueAt(selectedRow, 2)));
             } else {
                 btnReturnBook.setEnabled(false);
+                btnMarkLost.setEnabled(false);
                 btnPrintReceipt.setEnabled(false);
                 selectedTransactionId = -1;
             }
@@ -409,6 +684,46 @@ public class TransactionsPanel extends JPanel {
                     JOptionPane.showMessageDialog(TransactionsPanel.this, "Kesalahan saat mengembalikan buku: " + ex.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
                 } finally {
                     btnReturnBook.setEnabled(true);
+                    btnMarkLost.setEnabled(true);
+                }
+            }
+        });
+
+        btnMarkLost.addActionListener(e -> {
+            int selectedRow = transactionsTable.getSelectedRow();
+            if (selectedRow == -1) return;
+
+            int txId = (Integer) transactionsTableModel.getValueAt(selectedRow, 0);
+            int bookId = (Integer) transactionsTableModel.getValueAt(selectedRow, 2);
+
+            String input = JOptionPane.showInputDialog(
+                this,
+                "Masukkan jumlah denda untuk Buku Hilang (Rp):",
+                "Konfirmasi Buku Hilang",
+                JOptionPane.WARNING_MESSAGE
+            );
+
+            if (input != null && !input.trim().isEmpty()) {
+                try {
+                    double fineAmount = Double.parseDouble(input.trim().replace(".", "").replace(",", ""));
+                    if (fineAmount < 0) {
+                        JOptionPane.showMessageDialog(this, "Denda tidak boleh negatif.", "Input Tidak Valid", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    
+                    btnMarkLost.setEnabled(false);
+                    boolean success = transactionService.markBookAsLost(txId, bookId, fineAmount);
+                    if (success) {
+                        JOptionPane.showMessageDialog(this, "Buku berhasil ditandai sebagai Hilang.\nDenda sebesar Rp " + String.format("%,.0f", fineAmount) + " telah ditambahkan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        loadTransactionsData(currentSearchQuery);
+                        clearForm();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Gagal memproses buku hilang.", "Kesalahan", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Masukkan angka yang valid.", "Input Tidak Valid", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    btnMarkLost.setEnabled(true);
                 }
             }
         });
@@ -441,6 +756,59 @@ public class TransactionsPanel extends JPanel {
         loadTransactionsData(null);
     }
 
+    private JPanel createPreviewCard(String headerText, JLabel titleLabel, JLabel subtitleLabel, JLabel[] extraLabels, JLabel statusLabel) {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(UIManager.getColor("Component.background"));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DesignSystem.OUTLINE_VARIANT, 1, true),
+            BorderFactory.createEmptyBorder(12, 16, 12, 16)
+        ));
+        card.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
+
+        JLabel header = new JLabel(headerText);
+        header.setFont(DesignSystem.bodyFont(9f, Font.BOLD));
+        header.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 6, 0);
+        card.add(header, gbc);
+
+        titleLabel.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+        titleLabel.setForeground(DesignSystem.ON_SURFACE);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        card.add(titleLabel, gbc);
+
+        subtitleLabel.setFont(DesignSystem.bodyFont(11f, Font.PLAIN));
+        subtitleLabel.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 0, 6, 0);
+        card.add(subtitleLabel, gbc);
+
+        int gridy = 3;
+        if (extraLabels != null) {
+            for (JLabel lbl : extraLabels) {
+                lbl.setFont(DesignSystem.bodyFont(10.5f, Font.PLAIN));
+                lbl.setForeground(DesignSystem.ON_SURFACE_VARIANT);
+                gbc.gridy = gridy++;
+                gbc.insets = new Insets(0, 0, 4, 0);
+                card.add(lbl, gbc);
+            }
+        }
+
+        statusLabel.setFont(DesignSystem.bodyFont(11f, Font.BOLD));
+        statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridy = gridy;
+        gbc.insets = new Insets(6, 0, 0, 0);
+        card.add(statusLabel, gbc);
+
+        return card;
+    }
+
     public void setSearchQuery(String query) {
         this.currentSearchQuery = query;
         currentPage = 1;
@@ -461,12 +829,17 @@ public class TransactionsPanel extends JPanel {
                 txs = transactionService.searchTransactions(searchQuery.trim(), currentPage, pageSize);
             }
             for (Transaction tx : txs) {
+                String statusIndo = tx.getStatus();
+                if ("Issued".equalsIgnoreCase(statusIndo)) statusIndo = "Dipinjam";
+                else if ("Returned".equalsIgnoreCase(statusIndo)) statusIndo = "Dikembalikan";
+                else if ("Lost".equalsIgnoreCase(statusIndo)) statusIndo = "Hilang";
+
                 transactionsTableModel.addRow(new Object[]{
                     tx.getTransactionId(), tx.getUserId(), tx.getBookId(),
                     tx.getMemberCode(), tx.getBookTitle(),
                     tx.getIssueDate(), tx.getDueDate(),
                     tx.getReturnDate() == null ? "-" : tx.getReturnDate(),
-                    tx.getStatus()
+                    statusIndo
                 });
             }
             if (lblPage != null) {
@@ -491,10 +864,24 @@ public class TransactionsPanel extends JPanel {
         lblBookTitle.setText(" ");
         lblError.setText(" ");
 
+        if (lblPreviewMemberName != null) {
+            lblPreviewMemberName.setText("Belum Memilih Anggota");
+            lblPreviewMemberCode.setText("-Masukkan nama/kode anggota-");
+            lblPreviewMemberContact.setText(" ");
+            lblPreviewMemberAddress.setText(" ");
+        }
+        if (lblPreviewBookTitle != null) {
+            lblPreviewBookTitle.setText("Belum Memilih Buku");
+            lblPreviewBookAuthor.setText("-Masukkan judul/ID buku-");
+            lblPreviewBookMeta.setText(" ");
+            lblPreviewBookStock.setText(" ");
+        }
+
         validatedUserId[0] = -1;
         selectedTransactionId = -1;
 
         btnReturnBook.setEnabled(false);
+        btnMarkLost.setEnabled(false);
         btnPrintReceipt.setEnabled(false);
         btnIssueBook.setEnabled(true);
         transactionsTable.clearSelection();
@@ -504,6 +891,8 @@ public class TransactionsPanel extends JPanel {
         } catch (Exception e) {
             spinDuration.setValue(7);
         }
+        
+        txtMemberCode.requestFocusInWindow();
     }
 
     private void saveTransaction() {
@@ -578,65 +967,158 @@ public class TransactionsPanel extends JPanel {
         if (codeText.isEmpty()) {
             outputLabel.setText(" ");
             outputLabel.setForeground(UIManager.getColor("Label.foreground"));
+            if (lblPreviewMemberName != null) {
+                lblPreviewMemberName.setText("Belum Memilih Anggota");
+                lblPreviewMemberCode.setText("-Masukkan nama/kode anggota-");
+                lblPreviewMemberContact.setText(" ");
+                lblPreviewMemberAddress.setText(" ");
+            }
             return;
         }
         
-        try {
-            User u = userService.getUserByMemberCode(codeText);
-            if (u != null) {
-                int activeLoans = transactionService.getActiveLoansCount(u.getUserId());
-                int maxLimit = Integer.parseInt(settingsService.getSetting("max_borrow_limit", "3"));
-                String roleIndo = "Admin".equalsIgnoreCase(u.getRole()) ? "Admin" : "Anggota";
-                String statusIndo = "Active".equalsIgnoreCase(u.getStatus()) ? "Aktif" : "Ditangguhkan";
-                if ("Suspended".equals(u.getStatus())) {
-                    outputLabel.setText("⚠ " + u.getFullName() + " (Ditangguhkan - TIDAK BISA MEMINJAM)");
-                    outputLabel.setForeground(new Color(230, 80, 80));
-                } else if (activeLoans >= maxLimit) {
-                    outputLabel.setText("⚠ " + u.getFullName() + " (Batas pinjam terpenuhi: " + activeLoans + "/" + maxLimit + " buku)");
-                    outputLabel.setForeground(new Color(230, 80, 80));
-                } else {
-                    outputLabel.setText("✔ " + u.getFullName() + " (" + roleIndo + " - " + statusIndo + " - Pinjam: " + activeLoans + "/" + maxLimit + ")");
-                    outputLabel.setForeground(new Color(101, 183, 108));
-                    validatedUserId[0] = u.getUserId();
+        new SwingWorker<User, Void>() {
+            private int activeLoans = 0;
+            private int maxLimit = 3;
+
+            @Override
+            protected User doInBackground() throws Exception {
+                User u = userService.getUserByMemberCode(codeText);
+                if (u != null) {
+                    activeLoans = transactionService.getActiveLoansCount(u.getUserId());
+                    maxLimit = Integer.parseInt(settingsService.getSetting("max_borrow_limit", "3"));
                 }
-            } else {
-                outputLabel.setText("❌ Anggota tidak ditemukan");
-                outputLabel.setForeground(new Color(230, 80, 80));
+                return u;
             }
-        } catch (Exception ex) {
-            outputLabel.setText("❌ Kesalahan memeriksa anggota");
-            outputLabel.setForeground(new Color(230, 80, 80));
-        }
+
+            @Override
+            protected void done() {
+                try {
+                    User u = get();
+                    if (!txtMemberCode.getText().trim().equals(codeText)) {
+                        return;
+                    }
+                    if (u != null) {
+                        String roleIndo = "Admin".equalsIgnoreCase(u.getRole()) ? "Admin" : "Anggota";
+                        
+                        if (lblPreviewMemberName != null) {
+                            lblPreviewMemberName.setText(u.getFullName());
+                            lblPreviewMemberCode.setText(u.getMemberCode() + " • " + roleIndo);
+                            
+                            String emailStr = (u.getEmail() == null || u.getEmail().isEmpty()) ? "-" : u.getEmail();
+                            String phoneStr = (u.getPhone() == null || u.getPhone().isEmpty()) ? "-" : u.getPhone();
+                            lblPreviewMemberContact.setText("✉ " + emailStr + "  •  📞 " + phoneStr);
+                            
+                            String addrStr = (u.getAddress() == null || u.getAddress().isEmpty()) ? "-" : u.getAddress();
+                            lblPreviewMemberAddress.setText("🏠 Alamat: " + addrStr);
+                        }
+                        
+                        if ("Suspended".equals(u.getStatus())) {
+                            outputLabel.setText("❌ DITANGGUHKAN - TIDAK BISA MEMINJAM");
+                            outputLabel.setForeground(new Color(230, 80, 80));
+                        } else if (activeLoans >= maxLimit) {
+                            outputLabel.setText("⚠ LIMIT TERCAPAI (" + activeLoans + "/" + maxLimit + " buku)");
+                            outputLabel.setForeground(new Color(230, 80, 80));
+                        } else {
+                            outputLabel.setText("✔ AKTIF - Pinjam: " + activeLoans + "/" + maxLimit);
+                            outputLabel.setForeground(new Color(101, 183, 108));
+                            validatedUserId[0] = u.getUserId();
+                        }
+                    } else {
+                        outputLabel.setText("❌ Anggota tidak ditemukan");
+                        outputLabel.setForeground(new Color(230, 80, 80));
+                        if (lblPreviewMemberName != null) {
+                            lblPreviewMemberName.setText("Anggota Tidak Ditemukan");
+                            lblPreviewMemberCode.setText("-");
+                            lblPreviewMemberContact.setText(" ");
+                            lblPreviewMemberAddress.setText(" ");
+                        }
+                    }
+                } catch (Exception ex) {
+                    outputLabel.setText("❌ Kesalahan memeriksa anggota");
+                    outputLabel.setForeground(new Color(230, 80, 80));
+                }
+            }
+        }.execute();
     }
 
     private void verifyBook(String idText, JLabel outputLabel) {
         if (idText.isEmpty()) {
             outputLabel.setText(" ");
             outputLabel.setForeground(UIManager.getColor("Label.foreground"));
+            if (lblPreviewBookTitle != null) {
+                lblPreviewBookTitle.setText("Belum Memilih Buku");
+                lblPreviewBookAuthor.setText("-Masukkan judul/ID buku-");
+                lblPreviewBookMeta.setText(" ");
+                lblPreviewBookStock.setText(" ");
+            }
             return;
         }
+        
+        int bookId;
         try {
-            int bookId = Integer.parseInt(idText);
-            Book b = bookService.getBookById(bookId);
-            if (b != null) {
-                if (b.getAvailableCopies() > 0) {
-                    outputLabel.setText("✔ " + b.getTitle() + " (" + b.getAvailableCopies() + " salinan tersedia)");
-                    outputLabel.setForeground(new Color(101, 183, 108));
-                } else {
-                    outputLabel.setText("⚠ " + b.getTitle() + " (Kosong - TIDAK BISA MEMINJAM)");
-                    outputLabel.setForeground(new Color(230, 80, 80));
-                }
-            } else {
-                outputLabel.setText("❌ Buku tidak ditemukan");
-                outputLabel.setForeground(new Color(230, 80, 80));
-            }
+            bookId = Integer.parseInt(idText);
         } catch (NumberFormatException e) {
             outputLabel.setText("❌ Format ID tidak valid");
             outputLabel.setForeground(new Color(230, 80, 80));
-        } catch (Exception ex) {
-            outputLabel.setText("❌ Kesalahan memeriksa buku");
-            outputLabel.setForeground(new Color(230, 80, 80));
+            if (lblPreviewBookTitle != null) {
+                lblPreviewBookTitle.setText("Format ID Tidak Valid");
+                lblPreviewBookAuthor.setText("Harus berupa angka");
+                lblPreviewBookMeta.setText(" ");
+                lblPreviewBookStock.setText(" ");
+            }
+            return;
         }
+
+        new SwingWorker<Book, Void>() {
+            @Override
+            protected Book doInBackground() throws Exception {
+                return bookService.getBookById(bookId);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Book b = get();
+                    if (!txtBookId.getText().trim().equals(idText)) {
+                        return;
+                    }
+                    if (b != null) {
+                        if (lblPreviewBookTitle != null) {
+                            lblPreviewBookTitle.setText(b.getTitle());
+                            lblPreviewBookAuthor.setText("Penulis: " + (b.getAuthor().isEmpty() ? "-" : b.getAuthor()) + "  •  Penerbit: " + (b.getPublisher().isEmpty() ? "-" : b.getPublisher()));
+                            
+                            String callNum = (b.getCallNumber().isEmpty()) ? "-" : b.getCallNumber();
+                            String classif = (b.getClassification().isEmpty()) ? "-" : b.getClassification();
+                            lblPreviewBookMeta.setText("Call No: " + callNum + "  •  Klasifikasi: " + classif);
+                            
+                            String isbnStr = (b.getIsbn().isEmpty()) ? "-" : b.getIsbn();
+                            String editStr = (b.getEdition().isEmpty()) ? "-" : b.getEdition();
+                            lblPreviewBookStock.setText("ISBN: " + isbnStr + "  •  Edisi: " + editStr);
+                        }
+                        
+                        if (b.getAvailableCopies() > 0) {
+                            outputLabel.setText("✔ TERSEDIA (" + b.getAvailableCopies() + " salinan)");
+                            outputLabel.setForeground(new Color(101, 183, 108));
+                        } else {
+                            outputLabel.setText("❌ KOSONG - TIDAK BISA DIPINJAM");
+                            outputLabel.setForeground(new Color(230, 80, 80));
+                        }
+                    } else {
+                        outputLabel.setText("❌ Buku tidak ditemukan");
+                        outputLabel.setForeground(new Color(230, 80, 80));
+                        if (lblPreviewBookTitle != null) {
+                            lblPreviewBookTitle.setText("Buku Tidak Ditemukan");
+                            lblPreviewBookAuthor.setText("-");
+                            lblPreviewBookMeta.setText(" ");
+                            lblPreviewBookStock.setText(" ");
+                        }
+                    }
+                } catch (Exception ex) {
+                    outputLabel.setText("❌ Kesalahan memeriksa buku");
+                    outputLabel.setForeground(new Color(230, 80, 80));
+                }
+            }
+        }.execute();
     }
 
     private void printReceipt(int transactionId) {

@@ -7,6 +7,8 @@
               pageWidth="420" pageHeight="595"
               columnWidth="380" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
     <property name="net.sf.jasperreports.compiler.xml.validation" value="false"/>
+    <parameter name="logoPath" class="java.lang.String"/>
+
 
     <parameter name="transaction_id" class="java.lang.Integer">
         <defaultValueExpression><![CDATA[0]]></defaultValueExpression>
@@ -62,6 +64,10 @@
                 <reportElement mode="Opaque" x="0" y="0" width="380" height="75" backcolor="#86000D"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="15" y="10" width="50" height="50" />
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <!-- Brand name -->
             <staticText>
                 <reportElement x="15" y="10" width="260" height="28" forecolor="#FFFFFF"/>
@@ -79,6 +85,10 @@
                 <reportElement mode="Opaque" x="268" y="16" width="94" height="34" backcolor="#FFFFFF"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="15" y="10" width="50" height="50" />
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <!-- Badge label -->
             <staticText>
                 <reportElement x="268" y="16" width="94" height="18" forecolor="#86000D"/>
@@ -108,6 +118,10 @@
                 <reportElement mode="Opaque" x="0" y="5" width="380" height="20" backcolor="#F2F4F6"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="15" y="10" width="50" height="50" />
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <staticText>
                 <reportElement x="8" y="5" width="370" height="20" forecolor="#86000D"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
@@ -187,6 +201,10 @@
                 <reportElement mode="Opaque" x="0" y="118" width="380" height="20" backcolor="#F2F4F6"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="15" y="10" width="50" height="50" />
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <staticText>
                 <reportElement x="8" y="118" width="370" height="20" forecolor="#86000D"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
@@ -282,6 +300,10 @@
                 <reportElement mode="Opaque" x="0" y="249" width="380" height="20" backcolor="#F2F4F6"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="15" y="10" width="50" height="50" />
+                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+            </image>
             <staticText>
                 <reportElement x="8" y="249" width="370" height="20" forecolor="#86000D"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>

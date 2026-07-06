@@ -3,7 +3,7 @@
   <groupId>com.Kelompok1</groupId>
   <artifactId>PerpustakaanFreedom</artifactId>
   <versioning>
-    <lastUpdated>20260704120219</lastUpdated>
+    <lastUpdated>20260706023253</lastUpdated>
     <snapshot>
       <localCopy>true</localCopy>
     </snapshot>
@@ -11,12 +11,12 @@
       <snapshotVersion>
         <extension>pom</extension>
         <value>1.0-SNAPSHOT</value>
-        <updated>20260704120219</updated>
+        <updated>20260706023253</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>jar</extension>
         <value>1.0-SNAPSHOT</value>
-        <updated>20260704120219</updated>
+        <updated>20260706023253</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>

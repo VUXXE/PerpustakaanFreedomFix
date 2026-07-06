@@ -1,8 +1,8 @@
 package com.kelompok1.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.service.Services.UserService;
-import com.kelompok1.model.Models.User;
+import com.kelompok1.service.UserService;
+import com.kelompok1.model.User;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -42,19 +42,18 @@ public class LoginView extends JFrame {
         formPanel.setBackground(DesignSystem.SURFACE_CONTAINER_LOWEST);
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 48, 20, 48));
 
-        // Brand badge
-        JLabel lblBrand = new JLabel("AKADEMIK");
-        lblBrand.setFont(DesignSystem.bodyFont(10f, Font.BOLD));
-        lblBrand.setForeground(DesignSystem.PRIMARY);
-        lblBrand.putClientProperty(FlatClientProperties.STYLE,
-            "background: #fce8e6; foreground: #86000d; opaque: true");
-        lblBrand.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
-        lblBrand.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         // Heading
         JLabel lblTitle = new JLabel("Perpustakaan Freedom");
         lblTitle.setFont(DesignSystem.displayFont(26f, Font.BOLD));
         lblTitle.setForeground(DesignSystem.ON_SURFACE);
+        try {
+            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.File("LOGO.png"));
+            int targetWidth = 260;
+            int targetHeight = (img.getHeight() * targetWidth) / img.getWidth();
+            java.awt.Image scaled = img.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
+            lblTitle.setIcon(new ImageIcon(scaled));
+            lblTitle.setText("");
+        } catch (Exception e) {}
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSubtitle = new JLabel("Masuk ke akun Anda untuk melanjutkan");
@@ -108,8 +107,6 @@ public class LoginView extends JFrame {
         getRootPane().setDefaultButton(btnLogin);
 
         // Assemble form
-        formPanel.add(lblBrand);
-        formPanel.add(Box.createVerticalStrut(20));
         formPanel.add(lblTitle);
         formPanel.add(Box.createVerticalStrut(6));
         formPanel.add(lblSubtitle);

@@ -1,8 +1,8 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Models.Book;
-import com.kelompok1.service.Services.BookService;
+import com.kelompok1.model.Book;
+import com.kelompok1.service.BookService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -241,48 +241,33 @@ public class BooksPanel extends JPanel {
         booksTable.setModel(booksTableModel);
 
         // Resize ID column
-        booksTable.getColumnModel().getColumn(0).setMinWidth(50);
-        booksTable.getColumnModel().getColumn(0).setMaxWidth(50);
+        booksTable.getColumnModel().getColumn(0).setMinWidth(40);
+        booksTable.getColumnModel().getColumn(0).setMaxWidth(60);
+        booksTable.getColumnModel().getColumn(0).setPreferredWidth(50);
         // Resize ISBN column
         booksTable.getColumnModel().getColumn(1).setMinWidth(120);
-        booksTable.getColumnModel().getColumn(1).setMaxWidth(150);
+        booksTable.getColumnModel().getColumn(1).setMaxWidth(160);
+        booksTable.getColumnModel().getColumn(1).setPreferredWidth(140);
+        // Resize Judul column (expandable)
+        booksTable.getColumnModel().getColumn(2).setPreferredWidth(300);
         // Resize Penulis column
-        booksTable.getColumnModel().getColumn(3).setMinWidth(120);
-        booksTable.getColumnModel().getColumn(3).setMaxWidth(150);
+        booksTable.getColumnModel().getColumn(3).setMinWidth(150);
+        booksTable.getColumnModel().getColumn(3).setMaxWidth(250);
+        booksTable.getColumnModel().getColumn(3).setPreferredWidth(200);
         // Resize Penerbit column
-        booksTable.getColumnModel().getColumn(4).setMinWidth(120);
-        booksTable.getColumnModel().getColumn(4).setMaxWidth(150);
-        // Resize Total column
-        booksTable.getColumnModel().getColumn(5).setMinWidth(50);
-        booksTable.getColumnModel().getColumn(5).setMaxWidth(50);
-        // Resize Avail column
-        booksTable.getColumnModel().getColumn(6).setMinWidth(50);
-        booksTable.getColumnModel().getColumn(6).setMaxWidth(50);
+        booksTable.getColumnModel().getColumn(4).setMinWidth(150);
+        booksTable.getColumnModel().getColumn(4).setMaxWidth(220);
+        booksTable.getColumnModel().getColumn(4).setPreferredWidth(180);
+        // Resize Total column (increased to prevent 'TO...' truncation)
+        booksTable.getColumnModel().getColumn(5).setMinWidth(70);
+        booksTable.getColumnModel().getColumn(5).setMaxWidth(90);
+        booksTable.getColumnModel().getColumn(5).setPreferredWidth(80);
+        // Resize Avail column (increased to prevent 'TE...' truncation)
+        booksTable.getColumnModel().getColumn(6).setMinWidth(70);
+        booksTable.getColumnModel().getColumn(6).setMaxWidth(90);
+        booksTable.getColumnModel().getColumn(6).setPreferredWidth(80);
 
-        // Make the Title column wrap text to 2 lines
         booksTable.setRowHeight(40);
-        booksTable.getColumnModel().getColumn(2).setCellRenderer(new javax.swing.table.DefaultTableCellRenderer() {
-            private final javax.swing.JTextArea textArea = new javax.swing.JTextArea();
-            {
-                textArea.setLineWrap(true);
-                textArea.setWrapStyleWord(true);
-                textArea.setOpaque(true);
-                textArea.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 5, 2, 5));
-            }
-            @Override
-            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                if (isSelected) {
-                    textArea.setBackground(t.getSelectionBackground());
-                    textArea.setForeground(t.getSelectionForeground());
-                } else {
-                    textArea.setBackground(t.getBackground());
-                    textArea.setForeground(t.getForeground());
-                }
-                textArea.setFont(t.getFont());
-                textArea.setText(value != null ? value.toString() : "");
-                return textArea;
-            }
-        });
 
         // Row Selection Listener
         booksTable.getSelectionModel().addListSelectionListener(e -> {

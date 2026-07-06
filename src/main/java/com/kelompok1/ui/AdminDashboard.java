@@ -2,7 +2,7 @@ package com.kelompok1.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
-import com.kelompok1.model.Models.User;
+import com.kelompok1.model.User;
 import com.kelompok1.ui.panel.DashboardPanel;
 import com.kelompok1.ui.panel.MembersPanel;
 import com.kelompok1.ui.panel.BooksPanel;
@@ -87,16 +87,7 @@ public class AdminDashboard extends JFrame {
         JPanel rightNav = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 16));
         rightNav.setOpaque(false);
 
-        JComboBox<String> comboDate = new JComboBox<>(new String[]{"6 bulan terakhir", "30 hari terakhir", "Tahun ini"});
-        comboDate.putClientProperty(FlatClientProperties.STYLE, "arc: 8; background: $Panel.background");
 
-        JButton btnTheme = new JButton(DesignSystem.getToggleLabel());
-        btnTheme.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-        btnTheme.putClientProperty(FlatClientProperties.STYLE, "arc: 8; margin: 4, 12, 4, 12");
-        btnTheme.addActionListener(e -> {
-            DesignSystem.toggleTheme(AdminDashboard.this);
-            btnTheme.setText(DesignSystem.getToggleLabel());
-        });
 
         // Profile chip
         JPanel profileChip = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
@@ -121,8 +112,7 @@ public class AdminDashboard extends JFrame {
         profileChip.add(avatar);
         profileChip.add(lblProfile);
 
-        rightNav.add(comboDate);
-        rightNav.add(btnTheme);
+
         rightNav.add(profileChip);
         topNav.add(rightNav, BorderLayout.EAST);
 
@@ -146,7 +136,6 @@ public class AdminDashboard extends JFrame {
         mainContent.add(finesPanel, "Fines");
         mainContent.add(reportsPanel, "Reports");
         mainContent.add(new SettingsPanel(), "Settings");
-        mainContent.add(createHelpPanel(), "Help");
 
         txtSearch.addActionListener(e -> {
             String q = txtSearch.getText().trim();
@@ -167,18 +156,6 @@ public class AdminDashboard extends JFrame {
         add(mainContainer, BorderLayout.CENTER);
     }
 
-    private JPanel createHelpPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBackground(DesignSystem.SURFACE);
-        panel.setBorder(BorderFactory.createEmptyBorder(28, 32, 28, 32));
-        JLabel lbl = new JLabel("<html>"
-            + "<span style='font-size:16pt; font-weight:bold; color:#191c1e'>Bantuan &amp; Dukungan</span><br><br>"
-            + "<span style='font-size:11pt; color:#5b403d'>Hubungi administrator sistem untuk bantuan lebih lanjut.</span>"
-            + "</html>");
-        panel.add(lbl);
-        return panel;
-    }
-
     // ─── Nested Sidebar Panel Class ──────────────────────────────────────────
     
     private static class SidebarPanel extends JPanel {
@@ -190,7 +167,6 @@ public class AdminDashboard extends JFrame {
         private final SidebarNavButton btnFines;
         private final SidebarNavButton btnReports;
         private final SidebarNavButton btnSettings;
-        private final SidebarNavButton btnHelp;
 
         public SidebarPanel(User loggedInUser, SidebarListener listener) {
             this.listener = listener;
@@ -207,6 +183,14 @@ public class AdminDashboard extends JFrame {
             JLabel lblHeader = new JLabel("Perpustakaan Freedom");
             lblHeader.setFont(DesignSystem.displayFont(15f, Font.BOLD));
             lblHeader.setForeground(DesignSystem.PRIMARY);
+            try {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.File("LOGO.png"));
+                int targetWidth = 180;
+                int targetHeight = (img.getHeight() * targetWidth) / img.getWidth();
+                java.awt.Image scaled = img.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
+                lblHeader.setIcon(new ImageIcon(scaled));
+                lblHeader.setText("");
+            } catch (Exception e) {}
             lblHeader.setBorder(BorderFactory.createEmptyBorder(24, 16, 24, 16));
             lblHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(lblHeader);
@@ -221,14 +205,13 @@ public class AdminDashboard extends JFrame {
 
             // Nav buttons
             ButtonGroup group = new ButtonGroup();
-            btnDashboard = createNavButton("Beranda",        "Dashboard");
-            btnMembers   = createNavButton("Members",        "Members");
-            btnAddBooks  = createNavButton("Manajemen Buku", "Books");
-            btnCheckout  = createNavButton("Transaksi",      "Transactions");
-            btnFines     = createNavButton("Denda",          "Fines");
-            btnReports   = createNavButton("Laporan",        "Reports");
-            btnSettings  = createNavButton("Pengaturan",     "Settings");
-            btnHelp      = createNavButton("Bantuan",        "Help");
+            btnDashboard = createNavButton("Beranda",        "Dashboard",    IconType.HOME);
+            btnMembers   = createNavButton("Members",        "Members",      IconType.USERS);
+            btnAddBooks  = createNavButton("Manajemen Buku", "Books",        IconType.BOOK);
+            btnCheckout  = createNavButton("Transaksi",      "Transactions", IconType.TRANSACTION);
+            btnFines     = createNavButton("Denda",          "Fines",        IconType.FINE);
+            btnReports   = createNavButton("Laporan",        "Reports",      IconType.DOCUMENT);
+            btnSettings  = createNavButton("Pengaturan",     "Settings",     IconType.SETTINGS);
 
             group.add(btnDashboard);
             group.add(btnMembers);
@@ -237,7 +220,6 @@ public class AdminDashboard extends JFrame {
             group.add(btnFines);
             group.add(btnReports);
             group.add(btnSettings);
-            group.add(btnHelp);
             btnDashboard.setSelected(true);
 
             add(btnDashboard);
@@ -254,25 +236,29 @@ public class AdminDashboard extends JFrame {
             add(Box.createVerticalStrut(8));
             add(btnSettings);
             add(Box.createVerticalStrut(8));
-            add(btnHelp);
             add(Box.createVerticalGlue());
 
             // Logout button
             JButton btnLogout = new JButton("Keluar");
+            btnLogout.setIcon(new SidebarIcon(IconType.LOGOUT));
+            btnLogout.setIconTextGap(14);
             btnLogout.setFont(DesignSystem.bodyFont(14f, Font.BOLD));
+            btnLogout.setForeground(new Color(0x5f6368));
+            btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
+            btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
+            btnLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+            btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btnLogout.setOpaque(false);
+            btnLogout.setBorderPainted(false);
+            btnLogout.setFocusPainted(false);
+            btnLogout.setContentAreaFilled(true);
             btnLogout.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
             btnLogout.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 12; " +
-                "margin: 12, 20, 12, 20; " +
-                "focusWidth: 0; innerFocusWidth: 0; " +
-                "background: null; borderWidth: 0; " +
-                "foreground: #ba1a1a; " +
-                "hoverBackground: #fdebee; " +
-                "font: bold");
-            btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
-            btnLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-            btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
-            btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                "margin: 8, 16, 8, 16; " +
+                "hoverBackground: #f1f3f4; " +
+                "font: +0"
+            );
             btnLogout.addActionListener(e -> {
                 if (listener != null) {
                     listener.onLogout();
@@ -282,8 +268,8 @@ public class AdminDashboard extends JFrame {
             add(Box.createVerticalStrut(10));
         }
 
-        private SidebarNavButton createNavButton(String label, String tabName) {
-            SidebarNavButton btn = new SidebarNavButton(label);
+        private SidebarNavButton createNavButton(String label, String tabName, IconType iconType) {
+            SidebarNavButton btn = new SidebarNavButton(label, iconType);
             btn.addActionListener(e -> notifyTabSelected(tabName));
             return btn;
         }
@@ -303,46 +289,125 @@ public class AdminDashboard extends JFrame {
                 case "Fines"        -> btnFines.setSelected(true);
                 case "Reports"      -> btnReports.setSelected(true);
                 case "Settings"     -> btnSettings.setSelected(true);
-                case "Help"         -> btnHelp.setSelected(true);
+            }
+        }
+
+        private enum IconType { HOME, USERS, BOOK, TRANSACTION, FINE, DOCUMENT, SETTINGS, LOGOUT }
+
+        private static class SidebarIcon implements Icon {
+            private final IconType type;
+            public SidebarIcon(IconType type) { this.type = type; }
+            @Override public int getIconWidth() { return 20; }
+            @Override public int getIconHeight() { return 20; }
+            @Override public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                
+                boolean selected = false;
+                if (c instanceof JToggleButton) {
+                    selected = ((JToggleButton)c).isSelected();
+                }
+                
+                // Color matches text color (white if selected, gray if not)
+                g2.setColor(selected ? Color.WHITE : new Color(0x5f6368));
+                g2.translate(x, y);
+                
+                switch(type) {
+                    case HOME -> {
+                        g2.drawPolygon(new int[]{2, 10, 18}, new int[]{10, 2, 10}, 3);
+                        g2.drawRect(4, 10, 12, 8);
+                        g2.drawRect(8, 14, 4, 4);
+                    }
+                    case USERS -> {
+                        g2.drawOval(6, 2, 6, 6);
+                        g2.drawArc(2, 11, 14, 14, 0, 180);
+                    }
+                    case BOOK -> {
+                        g2.drawRect(3, 3, 14, 14);
+                        g2.drawLine(10, 3, 10, 17);
+                    }
+                    case TRANSACTION -> {
+                        g2.drawLine(3, 7, 15, 7);
+                        g2.drawLine(15, 7, 12, 4);
+                        g2.drawLine(5, 13, 17, 13);
+                        g2.drawLine(5, 13, 8, 16);
+                    }
+                    case FINE -> {
+                        g2.drawOval(3, 3, 14, 14);
+                        g2.drawLine(10, 6, 10, 14);
+                        g2.drawArc(7, 6, 6, 4, 90, 180);
+                        g2.drawArc(7, 10, 6, 4, 270, 180);
+                    }
+                    case DOCUMENT -> {
+                        g2.drawRect(4, 2, 12, 16);
+                        g2.drawLine(7, 6, 13, 6);
+                        g2.drawLine(7, 10, 13, 10);
+                        g2.drawLine(7, 14, 10, 14);
+                    }
+                    case SETTINGS -> {
+                        g2.drawOval(6, 6, 8, 8);
+                        g2.drawLine(10, 2, 10, 4); g2.drawLine(10, 16, 10, 18);
+                        g2.drawLine(2, 10, 4, 10); g2.drawLine(16, 10, 18, 10);
+                        g2.drawLine(4, 4, 6, 6);   g2.drawLine(14, 14, 16, 16);
+                        g2.drawLine(14, 4, 16, 6); g2.drawLine(4, 14, 6, 16);
+                    }
+                    case LOGOUT -> {
+                        g2.drawRect(3, 3, 8, 14);
+                        g2.drawLine(16, 10, 8, 10);
+                        g2.drawLine(16, 10, 13, 7);
+                        g2.drawLine(16, 10, 13, 13);
+                    }
+                }
+                g2.dispose();
             }
         }
 
         private static class SidebarNavButton extends JToggleButton {
-            SidebarNavButton(String label) {
+            SidebarNavButton(String label, IconType iconType) {
                 super(label);
-                setFont(DesignSystem.bodyFont(14f, Font.PLAIN));
-                setForeground(new Color(0x4a4a4a));
+                setIcon(new SidebarIcon(iconType));
+                setIconTextGap(14);
+                setFont(DesignSystem.bodyFont(14f, Font.BOLD)); // Always bold for modern look
+                setForeground(new Color(0x5f6368));
                 setHorizontalAlignment(SwingConstants.LEFT);
                 setAlignmentX(Component.LEFT_ALIGNMENT);
-                setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+                setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
                 setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                setOpaque(true);
+                setOpaque(false);
                 setBorderPainted(false);
                 setFocusPainted(false);
                 setContentAreaFilled(true);
                 putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
                 putClientProperty(FlatClientProperties.STYLE,
                     "arc: 12; " +
-                    "margin: 12, 20, 12, 20; " +
-                    "selectedBackground: #86000d; " +
+                    "margin: 8, 16, 8, 16; " +
+                    "selectedBackground: #ba1a1a; " + // Vibrant red instead of blue
                     "selectedForeground: #ffffff; " +
-                    "hoverBackground: #eaecf0; " +
+                    "hoverBackground: #f1f3f4; " +
                     "font: +0"
                 );
             }
 
             @Override
             protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
                 if (isSelected()) {
-                    if (getFont().getStyle() != Font.BOLD) {
-                        setFont(DesignSystem.bodyFont(14f, Font.BOLD));
-                    }
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(0xba1a1a)); // Vibrant red
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                    g2.dispose();
+                    setForeground(Color.WHITE);
                 } else {
-                    if (getFont().getStyle() != Font.PLAIN) {
-                        setFont(DesignSystem.bodyFont(14f, Font.PLAIN));
-                    }
+                    setForeground(new Color(0x5f6368));
                 }
+                
+                boolean wasFilled = isContentAreaFilled();
+                if (isSelected()) {
+                    setContentAreaFilled(false);
+                }
+                super.paintComponent(g);
+                setContentAreaFilled(wasFilled);
             }
         }
     }

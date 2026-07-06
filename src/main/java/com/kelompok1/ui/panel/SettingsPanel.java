@@ -1,7 +1,7 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.service.Services.SettingsService;
+import com.kelompok1.service.SettingsService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -37,8 +37,7 @@ public class SettingsPanel extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
 
         // --- CONTENT PANEL (CENTER) ---
-        JPanel mainContent = new JPanel();
-        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        JPanel mainContent = new JPanel(new BorderLayout());
         mainContent.setBackground(UIManager.getColor("Panel.background"));
         mainContent.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
@@ -111,11 +110,17 @@ public class SettingsPanel extends JPanel {
         btnSave.addActionListener(e -> saveSettings());
         
         gbc.gridy = row++; gbc.gridx = 0; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.LINE_START;
-        gbc.insets = new Insets(20, 15, 10, 15);
+        gbc.insets = new Insets(30, 15, 10, 15);
         card.add(btnSave, gbc);
 
-        mainContent.add(card);
-        add(new JScrollPane(mainContent), BorderLayout.CENTER);
+        JPanel cardWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        cardWrapper.setOpaque(false);
+        cardWrapper.add(card);
+
+        mainContent.add(cardWrapper, BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane(mainContent);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        add(scrollPane, BorderLayout.CENTER);
 
         // Initial Load
         loadSettings();
@@ -123,19 +128,21 @@ public class SettingsPanel extends JPanel {
 
     private void addFormRow(JPanel panel, GridBagConstraints gbc, String labelText, Component comp, int row) {
         gbc.gridy = row;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.LINE_START;
         
         // Label
         gbc.gridx = 0;
-        gbc.weightx = 0.3;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
         JLabel label = new JLabel(labelText);
         label.putClientProperty(FlatClientProperties.STYLE, "font: bold");
+        label.setPreferredSize(new Dimension(280, 36));
         panel.add(label, gbc);
 
         // Component
         gbc.gridx = 1;
-        gbc.weightx = 0.7;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.NONE;
         panel.add(comp, gbc);
     }
 

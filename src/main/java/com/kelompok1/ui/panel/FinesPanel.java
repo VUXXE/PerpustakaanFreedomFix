@@ -1,8 +1,8 @@
 package com.kelompok1.ui.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Models.Fine;
-import com.kelompok1.service.Services.FineService;
+import com.kelompok1.model.Fine;
+import com.kelompok1.service.FineService;
 import com.kelompok1.util.DesignSystem;
 
 import javax.swing.*;
@@ -32,6 +32,7 @@ public class FinesPanel extends JPanel {
     private JTextField txtStatus;
     private JTextField txtUpdatedAt;
     private JButton btnPayFine;
+    private JButton btnCetakNota;
     private int selectedFineId = -1;
 
     public FinesPanel() {
@@ -193,6 +194,11 @@ public class FinesPanel extends JPanel {
         btnPayFine.setEnabled(false);
         buttonPanel.add(btnPayFine);
 
+        btnCetakNota = new JButton("Cetak Nota");
+        DesignSystem.applySecondaryButton(btnCetakNota);
+        btnCetakNota.setEnabled(false);
+        buttonPanel.add(btnCetakNota);
+
         formPanel.add(buttonPanel, fGbc);
 
         northWrapper.add(formPanel);
@@ -246,8 +252,10 @@ public class FinesPanel extends JPanel {
                 txtUpdatedAt.setText(updated);
 
                 btnPayFine.setEnabled("Lunas".equalsIgnoreCase(status) ? false : true);
+                btnCetakNota.setEnabled(true);
             } else {
                 btnPayFine.setEnabled(false);
+                btnCetakNota.setEnabled(false);
             }
         });
 
@@ -310,6 +318,18 @@ public class FinesPanel extends JPanel {
             }
         });
 
+        // Action Listener for Cetak Nota
+        btnCetakNota.addActionListener(e -> {
+            int selectedRow = finesTable.getSelectedRow();
+            if (selectedRow == -1 && selectedFineId == -1) return;
+
+            final int fineId = selectedFineId != -1 ? selectedFineId : (Integer) finesTableModel.getValueAt(selectedRow, 0);
+            
+            java.util.Map<String, Object> params = new java.util.HashMap<>();
+            params.put("fine_id", fineId);
+            com.kelompok1.report.ReportGenerator.showReportViewer("/reports/fine_receipt.jrxml", params);
+        });
+
         JScrollPane tableScroll = new JScrollPane(finesTable);
         tableScroll.setBorder(BorderFactory.createEmptyBorder());
         centerWrapper.add(tableScroll, BorderLayout.CENTER);
@@ -347,6 +367,7 @@ public class FinesPanel extends JPanel {
         txtStatus.setText("");
         txtUpdatedAt.setText("");
         btnPayFine.setEnabled(false);
+        btnCetakNota.setEnabled(false);
         finesTable.clearSelection();
     }
     

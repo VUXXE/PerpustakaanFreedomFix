@@ -1,13 +1,14 @@
 package com.kelompok1.ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.kelompok1.model.Models.User;
-import com.kelompok1.model.Models.Book;
-import com.kelompok1.model.Models.Transaction;
-import com.kelompok1.model.Models.Fine;
-import com.kelompok1.service.Services.BookService;
-import com.kelompok1.service.Services.TransactionService;
-import com.kelompok1.service.Services.FineService;
+import com.kelompok1.model.User;
+import com.kelompok1.model.Book;
+import com.kelompok1.model.Transaction;
+import com.kelompok1.model.Fine;
+import com.kelompok1.service.BookService;
+import com.kelompok1.service.TransactionService;
+import com.kelompok1.service.FineService;
+import com.kelompok1.service.UserService;
 import com.kelompok1.ui.panel.UIUtils;
 import com.kelompok1.util.DesignSystem;
 
@@ -28,6 +29,7 @@ public class MemberDashboard extends JFrame {
     private SearchCatalogPanel catalogPanel;
     private BorrowedBooksPanel borrowedPanel;
     private FinesLedgerPanel finesPanel;
+    private MemberSettingsPanel settingsPanel;
 
     public MemberDashboard(User user) {
         this.loggedInUser = user;
@@ -60,18 +62,7 @@ public class MemberDashboard extends JFrame {
         JPanel mainArea = new JPanel(new BorderLayout());
         mainArea.setBackground(DesignSystem.SURFACE);
 
-        // Top Bar (Theme Toggle)
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 12));
-        topBar.setBackground(DesignSystem.SURFACE);
-        JButton btnTheme = new JButton(DesignSystem.getToggleLabel());
-        btnTheme.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
-        btnTheme.putClientProperty(FlatClientProperties.STYLE, "arc: 8; margin: 4, 12, 4, 12");
-        btnTheme.addActionListener(e -> {
-            DesignSystem.toggleTheme(this);
-            btnTheme.setText(DesignSystem.getToggleLabel());
-        });
-        topBar.add(btnTheme);
-        mainArea.add(topBar, BorderLayout.NORTH);
+
 
         // Card Content
         cardLayout = new CardLayout();
@@ -84,11 +75,13 @@ public class MemberDashboard extends JFrame {
         catalogPanel = new SearchCatalogPanel();
         borrowedPanel = new BorrowedBooksPanel(loggedInUser.getUserId());
         finesPanel = new FinesLedgerPanel(loggedInUser.getUserId());
+        settingsPanel = new MemberSettingsPanel();
 
         mainContentPanel.add(homePanel, "Dashboard");
         mainContentPanel.add(catalogPanel, "Catalog");
         mainContentPanel.add(borrowedPanel, "Borrowed");
         mainContentPanel.add(finesPanel, "Fines");
+        mainContentPanel.add(settingsPanel, "Settings");
 
         mainArea.add(mainContentPanel, BorderLayout.CENTER);
         add(mainArea, BorderLayout.CENTER);
@@ -132,6 +125,7 @@ public class MemberDashboard extends JFrame {
         private final SidebarNavButton btnCatalog;
         private final SidebarNavButton btnBorrowed;
         private final SidebarNavButton btnFines;
+        private final SidebarNavButton btnSettings;
 
         public MemberSidebarPanel(User loggedInUser, SidebarListener listener) {
             this.listener = listener;
@@ -148,6 +142,14 @@ public class MemberDashboard extends JFrame {
             JLabel lblHeader = new JLabel("Perpustakaan Freedom");
             lblHeader.setFont(DesignSystem.displayFont(15f, Font.BOLD));
             lblHeader.setForeground(DesignSystem.PRIMARY);
+            try {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.File("LOGO.png"));
+                int targetWidth = 180;
+                int targetHeight = (img.getHeight() * targetWidth) / img.getWidth();
+                java.awt.Image scaled = img.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
+                lblHeader.setIcon(new ImageIcon(scaled));
+                lblHeader.setText("");
+            } catch (Exception e) {}
             lblHeader.setBorder(BorderFactory.createEmptyBorder(24, 16, 24, 16));
             lblHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(lblHeader);
@@ -162,15 +164,17 @@ public class MemberDashboard extends JFrame {
 
             // Nav buttons
             ButtonGroup group = new ButtonGroup();
-            btnDashboard = createNavButton("Beranda",       "Dashboard");
-            btnCatalog   = createNavButton("Katalog Buku",  "Catalog");
-            btnBorrowed  = createNavButton("Pinjaman Saya", "Borrowed");
-            btnFines     = createNavButton("Tagihan Denda", "Fines");
+            btnDashboard = createNavButton("Beranda",       "Dashboard", IconType.HOME);
+            btnCatalog   = createNavButton("Katalog Buku",  "Catalog",   IconType.BOOK);
+            btnBorrowed  = createNavButton("Pinjaman Saya", "Borrowed",  IconType.TRANSACTION);
+            btnFines     = createNavButton("Tagihan Denda", "Fines",     IconType.FINE);
+            btnSettings  = createNavButton("Pengaturan",    "Settings",  IconType.SETTINGS);
 
             group.add(btnDashboard);
             group.add(btnCatalog);
             group.add(btnBorrowed);
             group.add(btnFines);
+            group.add(btnSettings);
             btnDashboard.setSelected(true);
 
             add(btnDashboard);
@@ -180,24 +184,31 @@ public class MemberDashboard extends JFrame {
             add(btnBorrowed);
             add(Box.createVerticalStrut(8));
             add(btnFines);
+            add(Box.createVerticalStrut(8));
+            add(btnSettings);
             add(Box.createVerticalGlue());
 
             // Logout button
             JButton btnLogout = new JButton("Keluar");
+            btnLogout.setIcon(new SidebarIcon(IconType.LOGOUT));
+            btnLogout.setIconTextGap(14);
             btnLogout.setFont(DesignSystem.bodyFont(14f, Font.BOLD));
+            btnLogout.setForeground(new Color(0x5f6368));
+            btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
+            btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
+            btnLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+            btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btnLogout.setOpaque(false);
+            btnLogout.setBorderPainted(false);
+            btnLogout.setFocusPainted(false);
+            btnLogout.setContentAreaFilled(true);
             btnLogout.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
             btnLogout.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 12; " +
-                "margin: 12, 20, 12, 20; " +
-                "focusWidth: 0; innerFocusWidth: 0; " +
-                "background: null; borderWidth: 0; " +
-                "foreground: #ba1a1a; " +
-                "hoverBackground: #fdebee; " +
-                "font: bold");
-            btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
-            btnLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-            btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
-            btnLogout.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                "margin: 8, 16, 8, 16; " +
+                "hoverBackground: #f1f3f4; " +
+                "font: +0"
+            );
             btnLogout.addActionListener(e -> {
                 if (listener != null) {
                     listener.onLogout();
@@ -207,8 +218,8 @@ public class MemberDashboard extends JFrame {
             add(Box.createVerticalStrut(10));
         }
 
-        private SidebarNavButton createNavButton(String label, String tabName) {
-            SidebarNavButton btn = new SidebarNavButton(label);
+        private SidebarNavButton createNavButton(String label, String tabName, IconType iconType) {
+            SidebarNavButton btn = new SidebarNavButton(label, iconType);
             btn.addActionListener(e -> notifyTabSelected(tabName));
             return btn;
         }
@@ -228,42 +239,122 @@ public class MemberDashboard extends JFrame {
             }
         }
 
+        private enum IconType { HOME, USERS, BOOK, TRANSACTION, FINE, DOCUMENT, SETTINGS, LOGOUT }
+
+        private static class SidebarIcon implements Icon {
+            private final IconType type;
+            public SidebarIcon(IconType type) { this.type = type; }
+            @Override public int getIconWidth() { return 20; }
+            @Override public int getIconHeight() { return 20; }
+            @Override public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                
+                boolean selected = false;
+                if (c instanceof JToggleButton) {
+                    selected = ((JToggleButton)c).isSelected();
+                }
+                
+                // Color matches text color (white if selected, gray if not)
+                g2.setColor(selected ? Color.WHITE : new Color(0x5f6368));
+                g2.translate(x, y);
+                
+                switch(type) {
+                    case HOME -> {
+                        g2.drawPolygon(new int[]{2, 10, 18}, new int[]{10, 2, 10}, 3);
+                        g2.drawRect(4, 10, 12, 8);
+                        g2.drawRect(8, 14, 4, 4);
+                    }
+                    case USERS -> {
+                        g2.drawOval(6, 2, 6, 6);
+                        g2.drawArc(2, 11, 14, 14, 0, 180);
+                    }
+                    case BOOK -> {
+                        g2.drawRect(3, 3, 14, 14);
+                        g2.drawLine(10, 3, 10, 17);
+                    }
+                    case TRANSACTION -> {
+                        g2.drawLine(3, 7, 15, 7);
+                        g2.drawLine(15, 7, 12, 4);
+                        g2.drawLine(5, 13, 17, 13);
+                        g2.drawLine(5, 13, 8, 16);
+                    }
+                    case FINE -> {
+                        g2.drawOval(3, 3, 14, 14);
+                        g2.drawLine(10, 6, 10, 14);
+                        g2.drawArc(7, 6, 6, 4, 90, 180);
+                        g2.drawArc(7, 10, 6, 4, 270, 180);
+                    }
+                    case DOCUMENT -> {
+                        g2.drawRect(4, 2, 12, 16);
+                        g2.drawLine(7, 6, 13, 6);
+                        g2.drawLine(7, 10, 13, 10);
+                        g2.drawLine(7, 14, 10, 14);
+                    }
+                    case SETTINGS -> {
+                        g2.drawOval(6, 6, 8, 8);
+                        g2.drawLine(10, 2, 10, 4); g2.drawLine(10, 16, 10, 18);
+                        g2.drawLine(2, 10, 4, 10); g2.drawLine(16, 10, 18, 10);
+                        g2.drawLine(4, 4, 6, 6);   g2.drawLine(14, 14, 16, 16);
+                        g2.drawLine(14, 4, 16, 6); g2.drawLine(4, 14, 6, 16);
+                    }
+                    case LOGOUT -> {
+                        g2.drawRect(3, 3, 8, 14);
+                        g2.drawLine(16, 10, 8, 10);
+                        g2.drawLine(16, 10, 13, 7);
+                        g2.drawLine(16, 10, 13, 13);
+                    }
+                }
+                g2.dispose();
+            }
+        }
+
         private static class SidebarNavButton extends JToggleButton {
-            SidebarNavButton(String label) {
+            SidebarNavButton(String label, IconType iconType) {
                 super(label);
-                setFont(DesignSystem.bodyFont(14f, Font.PLAIN));
-                setForeground(new Color(0x4a4a4a));
+                setIcon(new SidebarIcon(iconType));
+                setIconTextGap(14);
+                setFont(DesignSystem.bodyFont(14f, Font.BOLD)); // Always bold for modern look
+                setForeground(new Color(0x5f6368));
                 setHorizontalAlignment(SwingConstants.LEFT);
                 setAlignmentX(Component.LEFT_ALIGNMENT);
-                setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+                setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
                 setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                setOpaque(true);
+                setOpaque(false);
                 setBorderPainted(false);
                 setFocusPainted(false);
                 setContentAreaFilled(true);
                 putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
                 putClientProperty(FlatClientProperties.STYLE,
                     "arc: 12; " +
-                    "margin: 12, 20, 12, 20; " +
-                    "selectedBackground: #86000d; " +
+                    "margin: 8, 16, 8, 16; " +
+                    "selectedBackground: #ba1a1a; " + // Vibrant red instead of blue
                     "selectedForeground: #ffffff; " +
-                    "hoverBackground: #eaecf0; " +
+                    "hoverBackground: #f1f3f4; " +
                     "font: +0"
                 );
             }
 
             @Override
             protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
                 if (isSelected()) {
-                    if (getFont().getStyle() != Font.BOLD) {
-                        setFont(DesignSystem.bodyFont(14f, Font.BOLD));
-                    }
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(0xba1a1a)); // Vibrant red
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                    g2.dispose();
+                    setForeground(Color.WHITE);
                 } else {
-                    if (getFont().getStyle() != Font.PLAIN) {
-                        setFont(DesignSystem.bodyFont(14f, Font.PLAIN));
-                    }
+                    setForeground(new Color(0x5f6368));
                 }
+                
+                boolean wasFilled = isContentAreaFilled();
+                if (isSelected()) {
+                    setContentAreaFilled(false);
+                }
+                super.paintComponent(g);
+                setContentAreaFilled(wasFilled);
             }
         }
     }
@@ -666,6 +757,124 @@ public class MemberDashboard extends JFrame {
             } catch (Exception e) {
                 e.printStackTrace();
                 catalogTitleLabel.setText("Katalog Perpustakaan (Gagal memuat data)");
+            }
+        }
+    }
+
+    // ─── Settings Panel (Member Password Change) ─────────────────────────────
+    
+    private class MemberSettingsPanel extends JPanel {
+        private final UserService userService = new UserService();
+        private JPasswordField txtOldPassword;
+        private JPasswordField txtNewPassword;
+        private JPasswordField txtConfirmPassword;
+
+        public MemberSettingsPanel() {
+            setLayout(new BorderLayout());
+            setBackground(DesignSystem.SURFACE);
+            setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            JPanel headerPanel = new JPanel(new BorderLayout());
+            headerPanel.setBackground(DesignSystem.SURFACE);
+            JLabel title = new JLabel("Ubah Kata Sandi");
+            title.putClientProperty(FlatClientProperties.STYLE, "font: bold +6");
+            headerPanel.add(title, BorderLayout.WEST);
+            add(headerPanel, BorderLayout.NORTH);
+
+            JPanel card = UIUtils.createCardPanel(new GridBagLayout());
+            card.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.insets = new Insets(10, 10, 10, 10);
+            gbc.weightx = 1.0;
+
+            int row = 0;
+
+            gbc.gridx = 0; gbc.gridy = row++;
+            JLabel lblOld = new JLabel("Kata Sandi Lama");
+            lblOld.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+            card.add(lblOld, gbc);
+
+            gbc.gridy = row++;
+            txtOldPassword = new JPasswordField(20);
+            txtOldPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true; arc: 8; margin: 8, 12, 8, 12");
+            card.add(txtOldPassword, gbc);
+
+            gbc.gridy = row++;
+            card.add(Box.createVerticalStrut(10), gbc);
+
+            gbc.gridy = row++;
+            JLabel lblNew = new JLabel("Kata Sandi Baru");
+            lblNew.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+            card.add(lblNew, gbc);
+
+            gbc.gridy = row++;
+            txtNewPassword = new JPasswordField(20);
+            txtNewPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true; arc: 8; margin: 8, 12, 8, 12");
+            card.add(txtNewPassword, gbc);
+
+            gbc.gridy = row++;
+            JLabel lblConfirm = new JLabel("Konfirmasi Kata Sandi Baru");
+            lblConfirm.setFont(DesignSystem.bodyFont(13f, Font.BOLD));
+            card.add(lblConfirm, gbc);
+
+            gbc.gridy = row++;
+            txtConfirmPassword = new JPasswordField(20);
+            txtConfirmPassword.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true; arc: 8; margin: 8, 12, 8, 12");
+            card.add(txtConfirmPassword, gbc);
+
+            gbc.gridy = row++;
+            card.add(Box.createVerticalStrut(20), gbc);
+
+            gbc.gridy = row++;
+            JButton btnSave = new JButton("Simpan Perubahan");
+            DesignSystem.applyPrimaryButton(btnSave);
+            btnSave.setFont(DesignSystem.bodyFont(14f, Font.BOLD));
+            btnSave.setPreferredSize(new Dimension(0, 44));
+            btnSave.addActionListener(e -> handleChangePassword());
+            card.add(btnSave, gbc);
+
+            JPanel centerWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            centerWrapper.setBackground(DesignSystem.SURFACE);
+            centerWrapper.add(card);
+
+            add(centerWrapper, BorderLayout.CENTER);
+        }
+
+        private void handleChangePassword() {
+            String oldPass = new String(txtOldPassword.getPassword());
+            String newPass = new String(txtNewPassword.getPassword());
+            String confirmPass = new String(txtConfirmPassword.getPassword());
+
+            if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Semua kolom harus diisi!", "Kesalahan Validasi", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (!newPass.equals(confirmPass)) {
+                JOptionPane.showMessageDialog(this, "Kata sandi baru tidak cocok dengan konfirmasi!", "Kesalahan Validasi", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (newPass.length() < 6) {
+                JOptionPane.showMessageDialog(this, "Kata sandi baru minimal 6 karakter!", "Kesalahan Validasi", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                boolean success = userService.changePassword(loggedInUser.getUserId(), oldPass, newPass);
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Kata sandi berhasil diubah!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                    txtOldPassword.setText("");
+                    txtNewPassword.setText("");
+                    txtConfirmPassword.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Kata sandi lama salah!", "Kesalahan", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Gagal mengubah kata sandi: " + ex.getMessage(), "Error Database", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
