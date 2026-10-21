@@ -1,6 +1,7 @@
 package com.kelompok1.report;
 
 import com.kelompok1.config.DatabaseHelper;
+import com.kelompok1.util.DesignSystem;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.design.JRDesignQuery;
 import net.sf.jasperreports.engine.design.JasperDesign;
@@ -80,7 +81,7 @@ public class ReportGenerator {
 
             // 4. Show Report Viewer (Swing Dialog Frame)
             net.sf.jasperreports.view.JasperViewer viewer = new net.sf.jasperreports.view.JasperViewer(print, false);
-            viewer.setTitle("Pratinjau Laporan — Perpustakaan Freedom");
+            viewer.setTitle("Pratinjau Laporan — " + DesignSystem.APP_TITLE);
             viewer.setLocationRelativeTo(null);
             viewer.setVisible(true);
 

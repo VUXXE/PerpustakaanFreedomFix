@@ -53,240 +53,244 @@
     </background>
 
     <title>
-        <band height="100" splitType="Stretch">
+        <band height="75" splitType="Stretch">
             <!-- Header stripe -->
             <rectangle>
                 <reportElement mode="Opaque" x="0" y="0" width="380" height="75" backcolor="#86000D"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
             <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
-                <reportElement x="15" y="10" width="50" height="50" />
+                <reportElement x="15" y="12" width="50" height="50" />
                 <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
             </image>
             <!-- Brand name -->
             <staticText>
-                <reportElement x="15" y="10" width="260" height="28" forecolor="#FFFFFF"/>
+                <reportElement x="75" y="12" width="190" height="28" forecolor="#FFFFFF"/>
                 <textElement verticalAlignment="Middle"><font size="18" isBold="true"/></textElement>
                 <text><![CDATA[PERPUSTAKAAN FREEDOM]]></text>
             </staticText>
             <!-- Tagline -->
             <staticText>
-                <reportElement x="15" y="38" width="260" height="16" forecolor="#F5C6CB"/>
+                <reportElement x="75" y="40" width="190" height="16" forecolor="#F5C6CB"/>
                 <textElement verticalAlignment="Middle"><font size="9" isItalic="true"/></textElement>
-                <text><![CDATA[Sistem Informasi Manajemen Perpustakaan]]></text>
+                <text><![CDATA[Sistem Aplikasi Administrasi]]></text>
             </staticText>
             <!-- Receipt badge background -->
             <rectangle>
-                <reportElement mode="Opaque" x="268" y="16" width="94" height="34" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="268" y="18" width="94" height="34" backcolor="#FFFFFF"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
-            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
-                <reportElement x="15" y="10" width="50" height="50" />
-                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
-            </image>
+
             <!-- Badge label -->
             <staticText>
-                <reportElement x="268" y="16" width="94" height="18" forecolor="#86000D"/>
+                <reportElement x="268" y="18" width="94" height="18" forecolor="#86000D"/>
                 <textElement textAlignment="Center" verticalAlignment="Bottom"><font size="7" isBold="true"/></textElement>
                 <text><![CDATA[NOTA DENDA]]></text>
             </staticText>
             <!-- Fine ID -->
             <textField>
-                <reportElement x="268" y="34" width="94" height="16" forecolor="#86000D"/>
+                <reportElement x="268" y="36" width="94" height="16" forecolor="#86000D"/>
                 <textElement textAlignment="Center" verticalAlignment="Top"><font size="11" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["#" + $F{fine_id}]]></textFieldExpression>
             </textField>
-            <!-- Print timestamp -->
-            <textField>
-                <reportElement x="0" y="80" width="380" height="16" forecolor="#5C5F61"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
-                <textFieldExpression><![CDATA["Dicetak: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
-            </textField>
+
         </band>
     </title>
 
     <detail>
-        <band height="400" splitType="Stretch">
+        <band height="225" splitType="Stretch">
 
             <!-- ── SECTION 1: DETAIL ANGGOTA ── -->
             <rectangle>
-                <reportElement mode="Opaque" x="0" y="5" width="380" height="20" backcolor="#F2F4F6"/>
+                <reportElement mode="Opaque" x="0" y="5" width="380" height="18" backcolor="#F2F4F6"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
-            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
-                <reportElement x="15" y="10" width="50" height="50" />
-                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
-            </image>
+
             <staticText>
-                <reportElement x="8" y="5" width="370" height="20" forecolor="#86000D"/>
+                <reportElement x="8" y="5" width="370" height="18" forecolor="#86000D"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[DETAIL ANGGOTA & TRANSAKSI]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="8" y="32" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="26" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Kode Anggota]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="32" width="10" height="16"/>
+                <reportElement x="128" y="26" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="32" width="234" height="16"/>
+                <reportElement x="138" y="26" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$F{member_code} == null ? "-" : $F{member_code}]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="50" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="41" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Nama Lengkap]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="50" width="10" height="16"/>
+                <reportElement x="128" y="41" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="50" width="234" height="16"/>
+                <reportElement x="138" y="41" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{full_name}]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="68" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="56" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[ID Transaksi]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="68" width="10" height="16"/>
+                <reportElement x="128" y="56" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="68" width="234" height="16"/>
+                <reportElement x="138" y="56" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["#" + $F{transaction_id}]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="86" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="71" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Judul Buku]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="86" width="10" height="16"/>
+                <reportElement x="128" y="71" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField textAdjust="StretchHeight">
-                <reportElement x="138" y="86" width="234" height="16"/>
+                <reportElement x="138" y="71" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
             </textField>
 
             <line>
-                <reportElement x="0" y="115" width="380" height="1" forecolor="#E4BEBA"/>
+                <reportElement x="0" y="91" width="380" height="1" forecolor="#E4BEBA"/>
             </line>
 
             <!-- ── SECTION 2: DETAIL DENDA ── -->
             <rectangle>
-                <reportElement mode="Opaque" x="0" y="125" width="380" height="20" backcolor="#F2F4F6"/>
+                <reportElement mode="Opaque" x="0" y="97" width="380" height="18" backcolor="#F2F4F6"/>
                 <graphicElement><pen lineWidth="0.0"/></graphicElement>
             </rectangle>
-            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
-                <reportElement x="15" y="10" width="50" height="50" />
-                <imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
-            </image>
+
             <staticText>
-                <reportElement x="8" y="125" width="370" height="20" forecolor="#86000D"/>
+                <reportElement x="8" y="97" width="370" height="18" forecolor="#86000D"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <text><![CDATA[RINCIAN DENDA KETERLAMBATAN]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="8" y="152" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="118" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Tanggal Jatuh Tempo]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="152" width="10" height="16"/>
+                <reportElement x="128" y="118" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="152" width="234" height="16"/>
+                <reportElement x="138" y="118" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{due_date}]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="170" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="133" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Nominal Denda]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="170" width="10" height="16"/>
+                <reportElement x="128" y="133" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="170" width="234" height="16"/>
+                <reportElement x="138" y="133" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Rp " + String.format("%,.0f", $F{amount})]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="188" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="148" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Status Pembayaran]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="188" width="10" height="16"/>
+                <reportElement x="128" y="148" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="188" width="234" height="16"/>
+                <reportElement x="138" y="148" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$F{fine_status}.equals("Paid") ? "LUNAS" : "BELUM LUNAS"]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="8" y="206" width="120" height="16" forecolor="#5C5F61"/>
+                <reportElement x="8" y="163" width="120" height="14" forecolor="#5C5F61"/>
                 <textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Tanggal Diperbarui]]></text>
             </staticText>
             <staticText>
-                <reportElement x="128" y="206" width="10" height="16"/>
+                <reportElement x="128" y="163" width="10" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <text><![CDATA[:]]></text>
             </staticText>
             <textField>
-                <reportElement x="138" y="206" width="234" height="16"/>
+                <reportElement x="138" y="163" width="234" height="14"/>
                 <textElement verticalAlignment="Middle"><font size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{updated_at}.isEmpty() ? "-" : $F{updated_at}.substring(0, Math.min(10, $F{updated_at}.length()))]]></textFieldExpression>
             </textField>
 
             <!-- Footer line -->
             <line>
-                <reportElement x="0" y="240" width="380" height="1" forecolor="#86000D"/>
+                <reportElement x="0" y="187" width="380" height="1" forecolor="#86000D"/>
                 <graphicElement><pen lineWidth="1.5"/></graphicElement>
             </line>
 
             <staticText>
-                <reportElement x="0" y="250" width="380" height="14" forecolor="#5C5F61"/>
+                <reportElement x="0" y="192" width="380" height="14" forecolor="#5C5F61"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isItalic="true"/></textElement>
                 <text><![CDATA[Nota ini merupakan bukti sah pembayaran denda jika status LUNAS.]]></text>
             </staticText>
             <staticText>
-                <reportElement x="0" y="265" width="380" height="14" forecolor="#86000D"/>
+                <reportElement x="0" y="207" width="380" height="14" forecolor="#86000D"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
                 <text><![CDATA[Terima kasih telah menggunakan layanan Perpustakaan Freedom!]]></text>
             </staticText>
         </band>
     </detail>
 
+    <summary>
+        <band height="100" splitType="Stretch">
+            <textField>
+                <reportElement x="180" y="10" width="200" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Jakarta, " + new java.text.SimpleDateFormat("EEEE d MMMM yyyy", new java.util.Locale("id", "ID")).format(new java.util.Date()).toLowerCase()]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="180" y="70" width="200" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[(Admin)]]></text>
+            </staticText>
+        </band>
+    </summary>
 </jasperReport>

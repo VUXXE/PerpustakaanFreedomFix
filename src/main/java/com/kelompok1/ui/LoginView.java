@@ -19,7 +19,7 @@ public class LoginView extends JFrame {
 
     public LoginView() {
         userService = new UserService();
-        setTitle("Perpustakaan Freedom — Masuk");
+        setTitle(DesignSystem.APP_TITLE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 640);
         setLocationRelativeTo(null);
@@ -43,7 +43,7 @@ public class LoginView extends JFrame {
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 48, 20, 48));
 
         // Heading
-        JLabel lblTitle = new JLabel("Perpustakaan Freedom");
+        JLabel lblTitle = new JLabel(DesignSystem.APP_TITLE);
         lblTitle.setFont(DesignSystem.displayFont(26f, Font.BOLD));
         lblTitle.setForeground(DesignSystem.ON_SURFACE);
         try {
@@ -172,14 +172,14 @@ public class LoginView extends JFrame {
                 // Overlay text
                 g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
                 g2.setColor(new Color(255, 255, 255, 220));
-                g2.setFont(DesignSystem.displayFont(22f, Font.BOLD));
-                String tagline = "Sistem Manajemen";
-                String tagline2 = "Perpustakaan Terpadu";
+                g2.setFont(DesignSystem.displayFont(18f, Font.BOLD));
+                String tagline = "SISTEM APLIKASI ADMINISTRASI";
+                String tagline2 = "PERPUSTAKAAN FREEDOM";
                 FontMetrics fm = g2.getFontMetrics();
                 int cx = (getWidth() - fm.stringWidth(tagline)) / 2;
                 g2.drawString(tagline, cx, getHeight() / 2 - 16);
                 cx = (getWidth() - fm.stringWidth(tagline2)) / 2;
-                g2.drawString(tagline2, cx, getHeight() / 2 + 20);
+                g2.drawString(tagline2, cx, getHeight() / 2 + 16);
 
                 g2.dispose();
             }

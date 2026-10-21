@@ -2,7 +2,7 @@
   <img src="LOGO.png" alt="Perpustakaan Freedom Logo" width="280">
 </p>
 
-<h1 align="center">Perpustakaan Freedom</h1>
+<h1 align="center">SISTEM APLIKASI ADMINISTRASI PERPUSTAKAAN FREEDOM</h1>
 
 <p align="center">
   <strong>Sistem Manajemen Perpustakaan Terpadu Modern berbasis Java Swing & MySQL</strong><br>
@@ -123,12 +123,29 @@ cd PerpustakaanFreedomFix
 ```
 
 ### 3. Konfigurasi Database MySQL
-1. Nyalakan layanan MySQL Anda (misalnya via XAMPP Control Panel).
+
+Anda dapat memilih salah satu metode untuk menjalankan database:
+
+#### Opsi A: Menggunakan Alpine Docker Container (Direkomendasikan — Tanpa XAMPP)
+Sangat ringan (berbasis Alpine Linux, konsumsi memori minimal, tanpa perlu install XAMPP):
+```bash
+# Menjalankan database di background
+./start-db.sh
+# atau: docker-compose up -d
+
+# Menghentikan database:
+./stop-db.sh
+# atau: docker-compose down
+```
+Database `perpustakaan` beserta skema tabel dan data awal langsung dibuat otomatis pada `localhost:3306` (user: `root`, password: kosong).
+
+#### Opsi B: Menggunakan XAMPP / MariaDB Manual
+1. Nyalakan modul MySQL Anda (misalnya via XAMPP Control Panel).
 2. Buat database baru bernama `perpustakaan`:
    ```sql
    CREATE DATABASE perpustakaan;
    ```
-3. Secara default, aplikasi mengarah ke kredensial:
+3. Kredensial default aplikasi:
    * **Host:** `localhost:3306`
    * **Database:** `perpustakaan`
    * **Username:** `root`
@@ -220,7 +237,7 @@ Proyek ini disusun dan diajukan untuk memenuhi penilaian **Tugas Akhir Mata Kuli
 
 * **Mata Kuliah:** Pemrograman Visual
 * **Kelompok:** Kelompok 1
-* **Nama Aplikasi:** Sistem Manajemen Perpustakaan Freedom
+* **Nama Aplikasi:** SISTEM APLIKASI ADMINISTRASI PERPUSTAKAAN FREEDOM
 * **Repositori GitHub:** [VUXXE/PerpustakaanFreedomFix](https://github.com/VUXXE/PerpustakaanFreedomFix)
 
 ### 👥 Anggota Tim Kelompok 1

@@ -29,7 +29,7 @@ public class AdminDashboard extends JFrame {
 
     public AdminDashboard(User user) {
         this.loggedInUser = user;
-        setTitle("Perpustakaan Freedom — Admin");
+        setTitle(DesignSystem.APP_TITLE + " — Admin");
         setSize(1300, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -180,7 +180,7 @@ public class AdminDashboard extends JFrame {
             ));
 
             // Brand logo text
-            JLabel lblHeader = new JLabel("Perpustakaan Freedom");
+            JLabel lblHeader = new JLabel(DesignSystem.APP_TITLE);
             lblHeader.setFont(DesignSystem.displayFont(15f, Font.BOLD));
             lblHeader.setForeground(DesignSystem.PRIMARY);
             try {

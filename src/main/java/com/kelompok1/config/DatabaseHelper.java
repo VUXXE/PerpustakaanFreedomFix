@@ -8,9 +8,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseHelper {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/perpustakaan?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "";
+    private static final String DB_URL = System.getenv("DB_URL") != null ? 
+        System.getenv("DB_URL") : "jdbc:mysql://localhost:3306/perpustakaan?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String DB_USER = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : "root";
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : "";
 
     private static HikariDataSource dataSource;
 
