@@ -60,16 +60,12 @@
             <staticText>
                 <reportElement x="75" y="40" width="320" height="20" forecolor="#ECEEF0"/>
                 <textElement verticalAlignment="Top"><font size="10" isItalic="true"/></textElement>
-                <text><![CDATA[Sistem Informasi Perpustakaan Freedom]]></text>
+                <text><![CDATA[Sistem Aplikasi Administrasi Perpustakaan Freedom]]></text>
             </staticText>
+
             <textField>
-                <reportElement x="380" y="40" width="155" height="20" forecolor="#ECEEF0"/>
-                <textElement textAlignment="Right" verticalAlignment="Top"><font size="9"/></textElement>
-                <textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="330" y="15" width="205" height="20" forecolor="#FFFFFF"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle"><font size="10" isBold="true"/></textElement>
+                <reportElement x="330" y="40" width="205" height="20" forecolor="#FFFFFF"/>
+                <textElement textAlignment="Right" verticalAlignment="Top"><font size="10" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Status Bayar: " + ($P{status_filter}.equals("All") ? "Semua" : ($P{status_filter}.equals("Paid") ? "Lunas" : "Belum Lunas"))]]></textFieldExpression>
             </textField>
         </band>
@@ -154,20 +150,45 @@
 
     <pageFooter>
         <band height="30" splitType="Stretch">
-            <textField>
-                <reportElement x="435" y="5" width="80" height="20"/>
-                <textElement textAlignment="Right"/>
-                <textFieldExpression><![CDATA["Halaman "+$V{PAGE_NUMBER}+" dari"]]></textFieldExpression>
-            </textField>
-            <textField evaluationTime="Report">
-                <reportElement x="515" y="5" width="40" height="20"/>
-                <textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
-            </textField>
             <staticText>
                 <reportElement x="0" y="5" width="150" height="20" forecolor="#5C5F61"/>
                 <textElement><font size="8"/></textElement>
                 <text><![CDATA[Perpustakaan Freedom - Laporan Sistem]]></text>
             </staticText>
+            <textField>
+                <reportElement x="160" y="5" width="117" height="20" forecolor="#5C5F61"/>
+                <textElement textAlignment="Right"><font size="8"/></textElement>
+                <textFieldExpression><![CDATA["Halaman "+$V{PAGE_NUMBER}+" dari"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="277" y="5" width="117" height="20" forecolor="#5C5F61"/>
+                <textElement textAlignment="Left"><font size="8"/></textElement>
+                <textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="395" y="5" width="160" height="20" forecolor="#000000"/>
+                <textElement textAlignment="Right"><font size="10" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA["Dicetak pada: " + new java.text.SimpleDateFormat("dd MMMM yyyy HH:mm", new java.util.Locale("id", "ID")).format(new java.util.Date())]]></textFieldExpression>
+            </textField>
         </band>
     </pageFooter>
+
+    <summary>
+        <band height="100" splitType="Stretch">
+            <textField>
+                <reportElement x="355" y="10" width="200" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Jakarta, " + new java.text.SimpleDateFormat("EEEE d MMMM yyyy", new java.util.Locale("id", "ID")).format(new java.util.Date()).toLowerCase()]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="355" y="70" width="200" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[(Admin)]]></text>
+            </staticText>
+        </band>
+    </summary>
 </jasperReport>

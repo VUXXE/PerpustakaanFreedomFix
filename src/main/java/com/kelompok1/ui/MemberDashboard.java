@@ -33,7 +33,7 @@ public class MemberDashboard extends JFrame {
 
     public MemberDashboard(User user) {
         this.loggedInUser = user;
-        setTitle("Perpustakaan Freedom — Anggota");
+        setTitle(DesignSystem.APP_TITLE + " — Anggota");
         setSize(1100, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -139,7 +139,7 @@ public class MemberDashboard extends JFrame {
             ));
 
             // Brand logo text
-            JLabel lblHeader = new JLabel("Perpustakaan Freedom");
+            JLabel lblHeader = new JLabel(DesignSystem.APP_TITLE);
             lblHeader.setFont(DesignSystem.displayFont(15f, Font.BOLD));
             lblHeader.setForeground(DesignSystem.PRIMARY);
             try {

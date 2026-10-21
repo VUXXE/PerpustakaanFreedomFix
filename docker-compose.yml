@@ -1,0 +1,17 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: perpustakaan-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=perpustakaan
+      - TZ=Asia/Jakarta
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

@@ -12,6 +12,8 @@ import java.awt.*;
  */
 public class DesignSystem {
 
+    public static final String APP_TITLE = "SISTEM APLIKASI ADMINISTRASI PERPUSTAKAAN FREEDOM";
+
     // ─────────────────────────────────────────────
     // COLOR TOKENS
     // ─────────────────────────────────────────────
